@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Added unique `username` column to `users` table database schema.
 - Added username validation and registration input field on the `Register.tsx` page.
+- Added `username` validation rule to `ProfileUpdateRequest.php` and input field on the `UpdateProfileInformationForm.tsx` profile edit page.
 
 ### Changed
 - Updated `LoginRequest.php` authentication and rate limiting validation to accept either email or username via a unified "login" field.
