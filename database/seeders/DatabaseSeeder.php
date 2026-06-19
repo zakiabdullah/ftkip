@@ -26,6 +26,7 @@ class DatabaseSeeder extends Seeder
             [
                 'id' => 1,
                 'name' => 'Ahmad Zaki Abdullah',
+                'username' => 'ahmadzaki',
                 'password' => Hash::make('password'),
             ]
         );

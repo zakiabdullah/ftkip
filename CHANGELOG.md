@@ -5,6 +5,17 @@ All notable changes to the **SPMP-FTKIP** project will be documented in this fil
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-06-20
+
+### Added
+- Added unique `username` column to `users` table database schema.
+- Added username validation and registration input field on the `Register.tsx` page.
+
+### Changed
+- Updated `LoginRequest.php` authentication and rate limiting validation to accept either email or username via a unified "login" field.
+- Updated `Login.tsx` view to prompt users with "Email or Username".
+- Seeded the default user `ahmadzaki@utem.edu.my` with the username `ahmadzaki` in `DatabaseSeeder.php`.
+
 ## [0.2.0] - 2026-06-20
 
 ### Added

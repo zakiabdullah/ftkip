@@ -9,6 +9,7 @@ import { FormEventHandler } from 'react';
 export default function Register() {
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
+        username: '',
         email: '',
         password: '',
         password_confirmation: '',
@@ -43,6 +44,21 @@ export default function Register() {
                 </div>
 
                 <div className="grid gap-2">
+                    <Label htmlFor="username">Username</Label>
+
+                    <Input
+                        id="username"
+                        name="username"
+                        value={data.username}
+                        autoComplete="username"
+                        onChange={(e) => setData('username', e.target.value)}
+                        required
+                    />
+
+                    <InputError message={errors.username} />
+                </div>
+
+                <div className="grid gap-2">
                     <Label htmlFor="email">Email</Label>
 
                     <Input
@@ -50,7 +66,7 @@ export default function Register() {
                         type="email"
                         name="email"
                         value={data.email}
-                        autoComplete="username"
+                        autoComplete="email"
                         onChange={(e) => setData('email', e.target.value)}
                         required
                     />
