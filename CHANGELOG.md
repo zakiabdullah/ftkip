@@ -5,6 +5,23 @@ All notable changes to the **SPMP-FTKIP** project will be documented in this fil
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-06-20
+
+### Added
+- Created 10 core relational database migration files (laboratories, equipment, bookings, damage reports, work orders, certifications, consumables, logbooks) and ran them successfully.
+- Initialized `shadcn/ui` component library (Radix + Nova preset) configured to use capitalized component paths (`@/Components`).
+- Installed 18 shadcn UI primitives (button, card, dialog, sheet, sidebar, table, tabs, tooltip, popover, select, input, label, badge, avatar, calendar, separator, skeleton, dropdown-menu) and copied custom inputs (date-time picker, custom date range picker, form, switch, checkbox, textarea, alert-dialog).
+- Installed Spatie Permission authorization package and created `roles` and `permissions` tables.
+- Programmed `DatabaseSeeder.php` to seed default roles and create user **Ahmad Zaki Abdullah** (ID 1, ahmadzaki@utem.edu.my) assigned to the `Super Administrator` role.
+- Added comprehensive English system documentation (63 markdown files) in `docs/` detailing all module specs, database schemas, and workflows.
+- Installed `react-hook-form`, `zod`, `@hookform/resolvers`, and `@radix-ui/react-icons` dependencies.
+
+### Changed
+- Refactored authentication views (`Login.tsx`, `Register.tsx`, and `GuestLayout.tsx`) to use shadcn/ui components.
+- Upgraded root `tailwindcss` dependency to `^4.0.0` and integrated `@tailwindcss/postcss` in `postcss.config.js` to fix PostCSS compatibility with Tailwind CSS v4.
+- Fixed case-sensitivity import paths for Next.js template assets in React components.
+- Sanitized `<Calendar>` properties in `date-time-picker.tsx` for `react-day-picker` v10 compatibility.
+
 ## [0.1.0] - 2026-06-20
 
 ### Added
