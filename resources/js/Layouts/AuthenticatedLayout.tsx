@@ -1,215 +1,283 @@
-import ApplicationLogo from '@/Components/ApplicationLogo';
-import Dropdown from '@/Components/Dropdown';
-import NavLink from '@/Components/NavLink';
-import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
+import * as React from 'react';
 import { Link, usePage } from '@inertiajs/react';
-import { PropsWithChildren, ReactNode, useState } from 'react';
+import { PropsWithChildren, ReactNode } from 'react';
+import {
+    SidebarProvider,
+    Sidebar,
+    SidebarContent,
+    SidebarFooter,
+    SidebarHeader,
+    SidebarInset,
+    SidebarMenu,
+    SidebarMenuButton,
+    SidebarMenuItem,
+    SidebarTrigger,
+} from '@/Components/ui/sidebar';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/Components/ui/dropdown-menu';
+import { Avatar, AvatarFallback } from '@/Components/ui/avatar';
+import { Separator } from '@/Components/ui/separator';
+import {
+    LayoutDashboard,
+    Building2,
+    Wrench,
+    Users,
+    LogOut,
+    User,
+    ChevronsUpDown,
+    Command,
+} from 'lucide-react';
 
 export default function Authenticated({
     header,
     children,
 }: PropsWithChildren<{ header?: ReactNode }>) {
     const user = usePage().props.auth.user;
+    const userRole = user.roles?.[0]?.name || 'Super Administrator';
 
-    const [showingNavigationDropdown, setShowingNavigationDropdown] =
-        useState(false);
+    const userInitials = user.name
+        ? user.name
+              .split(' ')
+              .map((n: string) => n[0])
+              .slice(0, 2)
+              .join('')
+              .toUpperCase()
+        : 'US';
+
+    const isDashboardActive = route().current('dashboard');
+    const isLaboratoriesActive = route().current('laboratories.*');
+    const isEquipmentActive = route().current('equipment.*');
+    const isUsersActive = route().current('users.*');
+
+    const getBreadcrumbs = () => {
+        if (route().current('dashboard')) {
+            return [{ label: 'Overview', url: route('dashboard') }, { label: 'Dashboard', active: true }];
+        }
+        if (route().current('laboratories.*')) {
+            return [{ label: 'Management', url: '#' }, { label: 'Laboratories', active: true }];
+        }
+        if (route().current('equipment.*')) {
+            return [{ label: 'Management', url: '#' }, { label: 'Equipment', active: true }];
+        }
+        if (route().current('users.*')) {
+            return [{ label: 'Management', url: '#' }, { label: 'Users', active: true }];
+        }
+        if (route().current('profile.edit')) {
+            return [{ label: 'Account', url: '#' }, { label: 'Profile Settings', active: true }];
+        }
+        return [{ label: 'Portal', active: true }];
+    };
 
     return (
-        <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
-            <nav className="border-b border-gray-100 bg-white dark:border-gray-700 dark:bg-gray-800">
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div className="flex h-16 justify-between">
-                        <div className="flex">
-                            <div className="flex shrink-0 items-center">
-                                <Link href="/">
-                                    <ApplicationLogo className="block h-9 w-auto fill-current text-gray-800 dark:text-gray-200" />
-                                </Link>
+        <SidebarProvider defaultOpen={true}>
+            <div className="flex min-h-screen w-full bg-zinc-50 dark:bg-zinc-950">
+                {/* Left Sidebar */}
+                <Sidebar variant="sidebar" collapsible="icon">
+                    {/* Header */}
+                    <SidebarHeader className="border-b border-sidebar-border/50 p-4">
+                        <div className="flex items-center gap-3 px-1.5 py-1">
+                            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-md shadow-indigo-500/20">
+                                <Command className="h-5 w-5" />
                             </div>
-
-                            <div className="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                                <NavLink
-                                    href={route('dashboard')}
-                                    active={route().current('dashboard')}
-                                >
-                                    Dashboard
-                                </NavLink>
-                                <NavLink
-                                    href={route('laboratories.index')}
-                                    active={route().current('laboratories.*')}
-                                >
-                                    Laboratories
-                                </NavLink>
-                                <NavLink
-                                    href={route('equipment.index')}
-                                    active={route().current('equipment.*')}
-                                >
-                                    Equipment
-                                </NavLink>
-                                <NavLink
-                                    href={route('users.index')}
-                                    active={route().current('users.*')}
-                                >
-                                    Users
-                                </NavLink>
+                            <div className="flex flex-col gap-0.5 leading-tight group-data-[collapsible=icon]:hidden">
+                                <span className="font-bold tracking-tight text-zinc-900 dark:text-zinc-50">SPMP-FTKIP</span>
+                                <span className="text-[10px] text-zinc-500 font-semibold uppercase tracking-wider dark:text-zinc-400">Portal</span>
                             </div>
                         </div>
+                    </SidebarHeader>
 
-                        <div className="hidden sm:ms-6 sm:flex sm:items-center">
-                            <div className="relative ms-3">
-                                <Dropdown>
-                                    <Dropdown.Trigger>
-                                        <span className="inline-flex rounded-md">
-                                            <button
-                                                type="button"
-                                                className="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-500 transition duration-150 ease-in-out hover:text-gray-700 focus:outline-none dark:bg-gray-800 dark:text-gray-400 dark:hover:text-gray-300"
+                    {/* Navigation Content */}
+                    <SidebarContent className="p-2 gap-4">
+                        {/* Overview Group */}
+                        <div className="px-2 py-1.5">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-450 dark:text-zinc-500 group-data-[collapsible=icon]:hidden">
+                                Overview
+                            </span>
+                            <SidebarMenu className="mt-1.5">
+                                <SidebarMenuItem>
+                                    <SidebarMenuButton
+                                        asChild
+                                        isActive={isDashboardActive}
+                                        tooltip="Dashboard"
+                                    >
+                                        <Link href={route('dashboard')} className="flex items-center gap-3">
+                                            <LayoutDashboard className="h-4.5 w-4.5 shrink-0" />
+                                            <span className="group-data-[collapsible=icon]:hidden">Dashboard</span>
+                                        </Link>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                            </SidebarMenu>
+                        </div>
+
+                        {/* Management Group */}
+                        <div className="px-2 py-1.5">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-450 dark:text-zinc-500 group-data-[collapsible=icon]:hidden">
+                                Management
+                            </span>
+                            <SidebarMenu className="mt-1.5 gap-1">
+                                <SidebarMenuItem>
+                                    <SidebarMenuButton
+                                        asChild
+                                        isActive={isLaboratoriesActive}
+                                        tooltip="Laboratories"
+                                    >
+                                        <Link href={route('laboratories.index')} className="flex items-center gap-3">
+                                            <Building2 className="h-4.5 w-4.5 shrink-0" />
+                                            <span className="group-data-[collapsible=icon]:hidden">Laboratories</span>
+                                        </Link>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+
+                                <SidebarMenuItem>
+                                    <SidebarMenuButton
+                                        asChild
+                                        isActive={isEquipmentActive}
+                                        tooltip="Equipment Assets"
+                                    >
+                                        <Link href={route('equipment.index')} className="flex items-center gap-3">
+                                            <Wrench className="h-4.5 w-4.5 shrink-0" />
+                                            <span className="group-data-[collapsible=icon]:hidden">Equipment Assets</span>
+                                        </Link>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+
+                                <SidebarMenuItem>
+                                    <SidebarMenuButton
+                                        asChild
+                                        isActive={isUsersActive}
+                                        tooltip="User Accounts"
+                                    >
+                                        <Link href={route('users.index')} className="flex items-center gap-3">
+                                            <Users className="h-4.5 w-4.5 shrink-0" />
+                                            <span className="group-data-[collapsible=icon]:hidden">User Accounts</span>
+                                        </Link>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                            </SidebarMenu>
+                        </div>
+                    </SidebarContent>
+
+                    {/* Footer / User Widget */}
+                    <SidebarFooter className="border-t border-sidebar-border/50 p-2">
+                        <SidebarMenu>
+                            <SidebarMenuItem>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <SidebarMenuButton
+                                            size="lg"
+                                            className="w-full justify-between data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                                        >
+                                            <div className="flex items-center gap-2 text-left">
+                                                <Avatar className="h-8 w-8 rounded-lg">
+                                                    <AvatarFallback className="rounded-lg font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
+                                                        {userInitials}
+                                                    </AvatarFallback>
+                                                </Avatar>
+                                                <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
+                                                    <span className="truncate font-semibold text-zinc-900 dark:text-zinc-50">{user.name}</span>
+                                                    <span className="truncate text-xs text-zinc-500 dark:text-zinc-400">{userRole}</span>
+                                                </div>
+                                            </div>
+                                            <ChevronsUpDown className="ml-auto size-4 text-zinc-500 dark:text-zinc-400 group-data-[collapsible=icon]:hidden" />
+                                        </SidebarMenuButton>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent
+                                        className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+                                        side="bottom"
+                                        align="end"
+                                        sideOffset={4}
+                                    >
+                                        <DropdownMenuLabel className="p-0 font-normal">
+                                            <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                                                <Avatar className="h-8 w-8 rounded-lg">
+                                                    <AvatarFallback className="rounded-lg font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
+                                                        {userInitials}
+                                                    </AvatarFallback>
+                                                </Avatar>
+                                                <div className="grid flex-1 text-left text-sm leading-tight">
+                                                    <span className="truncate font-semibold text-zinc-900 dark:text-zinc-50">{user.name}</span>
+                                                    <span className="truncate text-xs text-zinc-500 dark:text-zinc-400">{user.email}</span>
+                                                </div>
+                                            </div>
+                                        </DropdownMenuLabel>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem asChild>
+                                            <Link href={route('profile.edit')} className="w-full flex items-center gap-2 cursor-pointer">
+                                                <User className="size-4" />
+                                                <span>Profile Settings</span>
+                                            </Link>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem asChild>
+                                            <Link
+                                                href={route('logout')}
+                                                method="post"
+                                                as="button"
+                                                className="w-full flex items-center gap-2 text-red-600 dark:text-red-400 cursor-pointer focus:bg-red-50 dark:focus:bg-red-950/20 focus:text-red-600 text-left"
                                             >
-                                                {user.name}
+                                                <LogOut className="size-4" />
+                                                <span>Log Out</span>
+                                            </Link>
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </SidebarMenuItem>
+                        </SidebarMenu>
+                    </SidebarFooter>
+                </Sidebar>
 
-                                                <svg
-                                                    className="-me-0.5 ms-2 h-4 w-4"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    viewBox="0 0 20 20"
-                                                    fill="currentColor"
-                                                >
-                                                    <path
-                                                        fillRule="evenodd"
-                                                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                                        clipRule="evenodd"
-                                                    />
-                                                </svg>
-                                            </button>
-                                        </span>
-                                    </Dropdown.Trigger>
+                {/* Right Content View */}
+                <SidebarInset className="flex flex-col flex-1">
+                    {/* Top Header Bar */}
+                    <header className="flex h-16 shrink-0 items-center gap-2 border-b border-zinc-200/80 dark:border-zinc-800/80 px-4 bg-white dark:bg-zinc-950">
+                        <SidebarTrigger className="-ml-1 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50" />
+                        <Separator orientation="vertical" className="mr-2 h-4 bg-zinc-200 dark:bg-zinc-800" />
+                        
+                        {/* Breadcrumbs */}
+                        <div className="flex items-center gap-1.5 text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 font-medium">
+                            {getBreadcrumbs().map((item, index) => (
+                                <React.Fragment key={index}>
+                                    {index > 0 && <span className="text-zinc-300 dark:text-zinc-700">/</span>}
+                                    {item.active ? (
+                                        <span className="font-semibold text-zinc-900 dark:text-zinc-50">{item.label}</span>
+                                    ) : (
+                                        <span className="text-zinc-400 dark:text-zinc-500">{item.label}</span>
+                                    )}
+                                </React.Fragment>
+                            ))}
+                        </div>
 
-                                    <Dropdown.Content>
-                                        <Dropdown.Link
-                                            href={route('profile.edit')}
-                                        >
-                                            Profile
-                                        </Dropdown.Link>
-                                        <Dropdown.Link
-                                            href={route('logout')}
-                                            method="post"
-                                            as="button"
-                                        >
-                                            Log Out
-                                        </Dropdown.Link>
-                                    </Dropdown.Content>
-                                </Dropdown>
+                        <div className="flex-1" />
+
+                        {/* Top Right Quick Actions */}
+                        <div className="flex items-center gap-2">
+                            <span className="hidden sm:inline-flex items-center gap-1.5 bg-indigo-50 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/30 px-2.5 py-1 rounded-full text-xs text-indigo-700 dark:text-indigo-400 font-semibold">
+                                {userRole}
+                            </span>
+                        </div>
+                    </header>
+
+                    {/* Page Main Header (Optional slot) */}
+                    {header && (
+                        <div className="bg-white dark:bg-zinc-950 border-b border-zinc-100 dark:border-zinc-900 py-6 px-6 sm:px-8">
+                            <div className="mx-auto max-w-7xl">
+                                {header}
                             </div>
                         </div>
+                    )}
 
-                        <div className="-me-2 flex items-center sm:hidden">
-                            <button
-                                onClick={() =>
-                                    setShowingNavigationDropdown(
-                                        (previousState) => !previousState,
-                                    )
-                                }
-                                className="inline-flex items-center justify-center rounded-md p-2 text-gray-400 transition duration-150 ease-in-out hover:bg-gray-100 hover:text-gray-500 focus:bg-gray-100 focus:text-gray-500 focus:outline-none dark:text-gray-500 dark:hover:bg-gray-900 dark:hover:text-gray-400 dark:focus:bg-gray-900 dark:focus:text-gray-400"
-                            >
-                                <svg
-                                    className="h-6 w-6"
-                                    stroke="currentColor"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        className={
-                                            !showingNavigationDropdown
-                                                ? 'inline-flex'
-                                                : 'hidden'
-                                        }
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth="2"
-                                        d="M4 6h16M4 12h16M4 18h16"
-                                    />
-                                    <path
-                                        className={
-                                            showingNavigationDropdown
-                                                ? 'inline-flex'
-                                                : 'hidden'
-                                        }
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth="2"
-                                        d="M6 18L18 6M6 6l12 12"
-                                    />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div
-                    className={
-                        (showingNavigationDropdown ? 'block' : 'hidden') +
-                        ' sm:hidden'
-                    }
-                >
-                    <div className="space-y-1 pb-3 pt-2">
-                        <ResponsiveNavLink
-                            href={route('dashboard')}
-                            active={route().current('dashboard')}
-                        >
-                            Dashboard
-                        </ResponsiveNavLink>
-                        <ResponsiveNavLink
-                            href={route('laboratories.index')}
-                            active={route().current('laboratories.*')}
-                        >
-                            Laboratories
-                        </ResponsiveNavLink>
-                        <ResponsiveNavLink
-                            href={route('equipment.index')}
-                            active={route().current('equipment.*')}
-                        >
-                            Equipment
-                        </ResponsiveNavLink>
-                        <ResponsiveNavLink
-                            href={route('users.index')}
-                            active={route().current('users.*')}
-                        >
-                            Users
-                        </ResponsiveNavLink>
-                    </div>
-
-                    <div className="border-t border-gray-200 pb-1 pt-4 dark:border-gray-600">
-                        <div className="px-4">
-                            <div className="text-base font-medium text-gray-800 dark:text-gray-200">
-                                {user.name}
-                            </div>
-                            <div className="text-sm font-medium text-gray-500">
-                                {user.email}
-                            </div>
-                        </div>
-
-                        <div className="mt-3 space-y-1">
-                            <ResponsiveNavLink href={route('profile.edit')}>
-                                Profile
-                            </ResponsiveNavLink>
-                            <ResponsiveNavLink
-                                method="post"
-                                href={route('logout')}
-                                as="button"
-                            >
-                                Log Out
-                            </ResponsiveNavLink>
-                        </div>
-                    </div>
-                </div>
-            </nav>
-
-            {header && (
-                <header className="bg-white shadow dark:bg-gray-800">
-                    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-                        {header}
-                    </div>
-                </header>
-            )}
-
-            <main>{children}</main>
-        </div>
+                    {/* Main Content Area */}
+                    <main className="flex-1 overflow-y-auto">
+                        {children}
+                    </main>
+                </SidebarInset>
+            </div>
+        </SidebarProvider>
     );
 }
