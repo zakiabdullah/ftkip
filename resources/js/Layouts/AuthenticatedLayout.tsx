@@ -33,7 +33,12 @@ import {
     User,
     ChevronsUpDown,
     Command,
+    Sun,
+    Moon,
+    Monitor,
 } from 'lucide-react';
+
+type Theme = 'light' | 'dark' | 'system';
 
 export default function Authenticated({
     header,
@@ -50,6 +55,43 @@ export default function Authenticated({
               .join('')
               .toUpperCase()
         : 'US';
+
+    const [theme, setThemeState] = React.useState<Theme>(() => {
+        if (typeof window !== 'undefined') {
+            return (localStorage.getItem('theme') as Theme) || 'system';
+        }
+        return 'system';
+    });
+
+    React.useEffect(() => {
+        const root = window.document.documentElement;
+        
+        const applyTheme = (currentTheme: Theme) => {
+            root.classList.remove('light', 'dark');
+            
+            if (currentTheme === 'system') {
+                const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                root.classList.add(systemDark ? 'dark' : 'light');
+            } else {
+                root.classList.add(currentTheme);
+            }
+        };
+
+        applyTheme(theme);
+
+        if (theme === 'system') {
+            const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+            const handleChange = () => applyTheme('system');
+            
+            mediaQuery.addEventListener('change', handleChange);
+            return () => mediaQuery.removeEventListener('change', handleChange);
+        }
+    }, [theme]);
+
+    const setTheme = (newTheme: Theme) => {
+        localStorage.setItem('theme', newTheme);
+        setThemeState(newTheme);
+    };
 
     const isDashboardActive = route().current('dashboard');
     const isLaboratoriesActive = route().current('laboratories.*');
@@ -258,7 +300,33 @@ export default function Authenticated({
                             <div className="flex-1" />
 
                             {/* Top Right Quick Actions */}
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-3">
+                                {/* Theme Switcher */}
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <button className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-200/80 bg-white text-zinc-500 hover:text-zinc-900 focus:outline-none dark:border-zinc-800/80 dark:bg-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-50 transition-colors">
+                                            {theme === 'light' && <Sun className="h-4.5 w-4.5" />}
+                                            {theme === 'dark' && <Moon className="h-4.5 w-4.5" />}
+                                            {theme === 'system' && <Monitor className="h-4.5 w-4.5" />}
+                                            <span className="sr-only">Toggle theme</span>
+                                        </button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className="w-32 rounded-lg">
+                                        <DropdownMenuItem onClick={() => setTheme('light')} className="cursor-pointer gap-2">
+                                            <Sun className="h-4 w-4" />
+                                            <span>Light</span>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => setTheme('dark')} className="cursor-pointer gap-2">
+                                            <Moon className="h-4 w-4" />
+                                            <span>Dark</span>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => setTheme('system')} className="cursor-pointer gap-2">
+                                            <Monitor className="h-4 w-4" />
+                                            <span>System</span>
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+
                                 <span className="hidden sm:inline-flex items-center gap-1.5 bg-indigo-50 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/30 px-2.5 py-1 rounded-full text-xs text-indigo-700 dark:text-indigo-400 font-semibold">
                                     {userRole}
                                 </span>
