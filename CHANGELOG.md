@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Created `UserManagementController` handling CRUD logic for users and Spatie roles sync.
 - Developed `UserManagement/Index.tsx` React list and editor page styled with `shadcn/ui` (supporting paginated table of users, avatars, role badges, search, role filters, and self-deletion block safety).
 - Registered users resource route in `web.php` and added navigation link in `AuthenticatedLayout.tsx`.
+- Seeded 35 default Assistant Engineer / Admin (Penolong Juruterera) users with unique email-based usernames and hashed default passwords in `DatabaseSeeder.php`.
 
 ## [0.4.0] - 2026-06-20
 
