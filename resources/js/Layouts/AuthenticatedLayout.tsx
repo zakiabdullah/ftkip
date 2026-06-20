@@ -33,6 +33,18 @@ export default function Authenticated({
                                 >
                                     Dashboard
                                 </NavLink>
+                                <NavLink
+                                    href={route('laboratories.index')}
+                                    active={route().current('laboratories.*')}
+                                >
+                                    Laboratories
+                                </NavLink>
+                                <NavLink
+                                    href={route('equipment.index')}
+                                    active={route().current('equipment.*')}
+                                >
+                                    Equipment
+                                </NavLink>
                             </div>
                         </div>
 
@@ -136,6 +148,18 @@ export default function Authenticated({
                             active={route().current('dashboard')}
                         >
                             Dashboard
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            href={route('laboratories.index')}
+                            active={route().current('laboratories.*')}
+                        >
+                            Laboratories
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink
+                            href={route('equipment.index')}
+                            active={route().current('equipment.*')}
+                        >
+                            Equipment
                         </ResponsiveNavLink>
                     </div>
 

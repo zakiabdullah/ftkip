@@ -5,6 +5,16 @@ All notable changes to the **SPMP-FTKIP** project will be documented in this fil
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-06-20
+
+### Added
+- Created `Laboratory` and `Equipment` Eloquent models with parent-child relationships.
+- Created request validation classes (`StoreLaboratoryRequest`, `UpdateLaboratoryRequest`, `StoreEquipmentRequest`, `UpdateEquipmentRequest`).
+- Created `LaboratoryController` and `EquipmentController` for managing resources with Inertia.js.
+- Developed `LaboratoryManagement/Index.tsx` and `EquipmentManagement/Index.tsx` React pages styled with `shadcn/ui` (supporting paginated tables, search, filters, and photo uploads).
+- Registered resource routes in `web.php` and updated `AuthenticatedLayout.tsx` side/top navigation links.
+- Updated `DatabaseSeeder.php` with mock laboratories and equipment for testing.
+
 ## [0.3.0] - 2026-06-20
 
 ### Added
