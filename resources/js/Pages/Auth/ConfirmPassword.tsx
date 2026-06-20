@@ -1,7 +1,14 @@
+import { Button } from '@/Components/ui/button';
+import { Input } from '@/Components/ui/input';
+import { Label } from '@/Components/ui/label';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/Components/ui/card';
 import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, useForm } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
@@ -23,34 +30,48 @@ export default function ConfirmPassword() {
         <GuestLayout>
             <Head title="Confirm Password" />
 
-            <div className="mb-4 text-sm text-gray-600 dark:text-gray-400">
-                This is a secure area of the application. Please confirm your
-                password before continuing.
-            </div>
+            <Card className="mx-auto w-full max-w-sm border border-zinc-200/80 dark:border-zinc-800 shadow-md bg-white dark:bg-zinc-900">
+                <CardHeader className="space-y-1.5 pb-6">
+                    <CardTitle className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+                        Confirm Password
+                    </CardTitle>
+                    <CardDescription className="text-sm text-zinc-550 dark:text-zinc-400">
+                        This is a secure area of the application. Please confirm your password before continuing.
+                    </CardDescription>
+                </CardHeader>
+                
+                <CardContent className="grid gap-4">
+                    <form onSubmit={submit} className="grid gap-4">
+                        {/* Password input */}
+                        <div className="grid gap-2">
+                            <Label htmlFor="password" className="text-zinc-700 dark:text-zinc-350">
+                                Password
+                            </Label>
+                            <Input
+                                id="password"
+                                type="password"
+                                name="password"
+                                placeholder="••••••••"
+                                value={data.password}
+                                onChange={(e) => setData('password', e.target.value)}
+                                className="w-full"
+                                required
+                                autoFocus
+                            />
+                            <InputError message={errors.password} />
+                        </div>
 
-            <form onSubmit={submit}>
-                <div className="mt-4">
-                    <InputLabel htmlFor="password" value="Password" />
-
-                    <TextInput
-                        id="password"
-                        type="password"
-                        name="password"
-                        value={data.password}
-                        className="mt-1 block w-full"
-                        isFocused={true}
-                        onChange={(e) => setData('password', e.target.value)}
-                    />
-
-                    <InputError message={errors.password} className="mt-2" />
-                </div>
-
-                <div className="mt-4 flex items-center justify-end">
-                    <PrimaryButton className="ms-4" disabled={processing}>
-                        Confirm
-                    </PrimaryButton>
-                </div>
-            </form>
+                        {/* Submit button */}
+                        <Button 
+                            type="submit" 
+                            className="w-full bg-zinc-950 text-zinc-50 hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-950 dark:hover:bg-zinc-200 transition-colors font-semibold mt-1"
+                            disabled={processing}
+                        >
+                            {processing ? 'Confirming...' : 'Confirm Password'}
+                        </Button>
+                    </form>
+                </CardContent>
+            </Card>
         </GuestLayout>
     );
 }
