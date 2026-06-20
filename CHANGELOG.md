@@ -5,6 +5,14 @@ All notable changes to the **SPMP-FTKIP** project will be documented in this fil
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-06-20
+
+### Added
+- Created `StoreUserRequest` and `UpdateUserRequest` validation classes for user account management.
+- Created `UserManagementController` handling CRUD logic for users and Spatie roles sync.
+- Developed `UserManagement/Index.tsx` React list and editor page styled with `shadcn/ui` (supporting paginated table of users, avatars, role badges, search, role filters, and self-deletion block safety).
+- Registered users resource route in `web.php` and added navigation link in `AuthenticatedLayout.tsx`.
+
 ## [0.4.0] - 2026-06-20
 
 ### Added
