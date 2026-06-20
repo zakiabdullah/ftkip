@@ -10,6 +10,8 @@ export interface User {
     email: string;
     email_verified_at?: string;
     roles?: Role[];
+    created_at?: string;
+    updated_at?: string;
 }
 
 export interface Laboratory {
@@ -56,6 +58,38 @@ export interface PaginatedData<T> {
     prev_page_url: string | null;
     to: number | null;
     total: number;
+}
+
+export interface DashboardBooking {
+    id: number;
+    start_time: string;
+    end_time: string;
+    purpose: string;
+    status: 'pending_supervisor' | 'pending_admin' | 'approved' | 'rejected' | 'cancelled';
+    created_at: string;
+    user_name: string;
+    laboratory_name: string;
+    laboratory_code: string;
+}
+
+export interface DashboardStats {
+    total_users: number;
+    total_laboratories: number;
+    total_equipment: number;
+    total_bookings: number;
+    lab_status_counts: {
+        active: number;
+        inactive: number;
+        maintenance: number;
+    };
+    equipment_status_counts: {
+        available: number;
+        reserved: number;
+        borrowed: number;
+        maintenance: number;
+        damaged: number;
+        retired: number;
+    };
 }
 
 export type PageProps<
