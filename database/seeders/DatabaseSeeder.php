@@ -146,10 +146,15 @@ class DatabaseSeeder extends Seeder
             $username = explode('@', $eng['email'])[0];
             $username = str_replace('.', '_', $username);
 
+            $name = ucwords(strtolower($eng['name']));
+            $name = preg_replace_callback('/@([a-z])/', function ($matches) {
+                return '@' . strtoupper($matches[1]);
+            }, $name);
+
             $newUser = User::updateOrCreate(
                 ['email' => $eng['email']],
                 [
-                    'name' => $eng['name'],
+                    'name' => $name,
                     'username' => $username,
                     'password' => Hash::make('password'),
                 ]
