@@ -8,6 +8,7 @@ use App\Models\EquipmentInventoryItem;
 use App\Models\Laboratory;
 use App\Models\SystemSetting;
 use App\Models\User;
+use App\Notifications\BookingStatusNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -45,6 +46,7 @@ class BookingController extends Controller
             'supervisors' => User::role('Lecturer / Supervisor')->select('id', 'name', 'email')->orderBy('name')->get(),
             'can_approve' => $user->hasRole(['Assistant Engineer', 'Lecturer / Supervisor', 'Super Administrator']),
             'booking_view' => $view,
+            'open_create' => $request->boolean('create'),
             'summary' => [
                 'total' => (clone $summaryQuery)->count(),
                 'pending' => (clone $summaryQuery)->whereIn('status', ['pending_supervisor', 'pending_admin'])->count(),
@@ -56,13 +58,20 @@ class BookingController extends Controller
     public function show(Request $request, Booking $booking): Response
     {
         $user = $request->user();
+        $booking->load(['user:id,name,email', 'supervisor:id,name,email', 'laboratory.responsibleOfficer:id,name,email', 'items.equipment:id,name,quantity,unit_type,status']);
         $isAllowed = $user->hasRole('Super Administrator')
             || $booking->user_id === $user->id
             || ($user->hasRole('Lecturer / Supervisor') && $booking->supervisor_id === $user->id)
             || ($user->hasRole('Assistant Engineer') && $booking->laboratory->responsible_officer_id === $user->id);
         abort_unless($isAllowed, 403);
 
-        return Inertia::render('Bookings/Show', ['booking' => $booking->load(['user:id,name,email', 'supervisor:id,name,email', 'laboratory:id,name,code,location', 'items.equipment:id,name,quantity,unit_type,status'])]);
+        $canApprove = ($booking->status === 'pending_supervisor' && $booking->supervisor_id === $user->id && $user->hasRole('Lecturer / Supervisor'))
+            || ($booking->status === 'pending_admin' && ($user->hasRole('Super Administrator') || ($user->hasRole('Assistant Engineer') && $booking->laboratory->responsible_officer_id === $user->id)));
+        $canReject = ($booking->status === 'pending_supervisor' && $booking->supervisor_id === $user->id && $user->hasRole('Lecturer / Supervisor'))
+            || (in_array($booking->status, ['pending_supervisor', 'pending_admin'], true) && $user->hasRole('Assistant Engineer') && $booking->laboratory->responsible_officer_id === $user->id)
+            || ($booking->status === 'pending_admin' && $user->hasRole('Super Administrator'));
+
+        return Inertia::render('Bookings/Show', compact('booking', 'canApprove', 'canReject'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -80,7 +89,7 @@ class BookingController extends Controller
         ]);
         $this->validateBookingRules($data);
 
-        DB::transaction(function () use ($data, $request) {
+        $booking = DB::transaction(function () use ($data, $request) {
             foreach ($data['items'] as $index => $item) {
                 $equipment = EquipmentInventoryItem::findOrFail($item['equipment_inventory_item_id']);
                 if ($equipment->laboratory_id !== (int) $data['laboratory_id']) {
@@ -114,7 +123,12 @@ class BookingController extends Controller
             foreach ($data['items'] as $item) {
                 $booking->items()->create($item);
             }
+
+            return $booking;
         });
+
+        $booking->load('laboratory', 'supervisor');
+        $this->notifyBooking($booking->supervisor, $booking, 'New booking request', "A booking request for {$booking->laboratory->name} is awaiting your review.", 'submitted');
 
         return redirect()->route('bookings.index')->with('success', 'Booking request submitted for supervisor approval.');
     }
@@ -148,20 +162,30 @@ class BookingController extends Controller
 
         if ($data['action'] === 'cancel' && $booking->user_id === $user->id && in_array($booking->status, ['pending_supervisor', 'pending_admin'], true)) {
             $booking->update(['status' => 'cancelled']);
+            $this->notifyBooking($booking->supervisor, $booking, 'Booking cancelled', 'The requester has cancelled this booking.', 'cancelled');
+            $this->notifyBooking($booking->laboratory->responsibleOfficer, $booking, 'Booking cancelled', 'The requester has cancelled this booking.', 'cancelled');
 
             return redirect()->route('bookings.index')->with('success', 'Booking request cancelled.');
         }
 
         if ($booking->status === 'pending_supervisor' && $data['action'] === 'reject' && $user->hasRole('Assistant Engineer') && $booking->laboratory->responsible_officer_id === $user->id) {
             $booking->update(['status' => 'rejected', 'rejection_reason' => $data['rejection_reason'] ?? null]);
+            $this->notifyBooking($booking->user, $booking, 'Booking rejected', 'Your booking was rejected by the Assistant Engineer. '.($data['rejection_reason'] ?? ''), 'rejected');
 
             return redirect()->route('bookings.index')->with('success', 'Booking request rejected.');
         }
 
         if ($booking->status === 'pending_supervisor' && $booking->supervisor_id === $user->id && $user->hasRole('Lecturer / Supervisor')) {
             $booking->update(['status' => $data['action'] === 'approve' ? 'pending_admin' : 'rejected', 'rejection_reason' => $data['action'] === 'reject' ? ($data['rejection_reason'] ?? null) : null, 'approved_by_supervisor_id' => $data['action'] === 'approve' ? $user->id : null]);
+            if ($data['action'] === 'approve') {
+                $this->notifyBooking($booking->user, $booking, 'Booking supported', 'Your lecturer has supported this booking. It is awaiting Assistant Engineer approval.', 'supported');
+                $this->notifyBooking($booking->laboratory->responsibleOfficer, $booking, 'Booking awaiting your approval', "A supported booking for {$booking->laboratory->name} needs your operational review.", 'awaiting_engineer');
+            } else {
+                $this->notifyBooking($booking->user, $booking, 'Booking rejected', 'Your lecturer rejected this booking. '.($data['rejection_reason'] ?? ''), 'rejected');
+            }
         } elseif ($booking->status === 'pending_admin' && ($user->hasRole('Super Administrator') || ($user->hasRole('Assistant Engineer') && $booking->laboratory->responsible_officer_id === $user->id))) {
             $booking->update(['status' => $data['action'] === 'approve' ? 'approved' : 'rejected', 'rejection_reason' => $data['action'] === 'reject' ? ($data['rejection_reason'] ?? null) : null, 'approved_by_admin_id' => $data['action'] === 'approve' ? $user->id : null]);
+            $this->notifyBooking($booking->user, $booking, $data['action'] === 'approve' ? 'Booking approved' : 'Booking rejected', $data['action'] === 'approve' ? 'Your booking has been approved for use.' : 'Your booking was rejected by the Assistant Engineer. '.($data['rejection_reason'] ?? ''), $data['action'] === 'approve' ? 'approved' : 'rejected');
         } else {
             abort(403);
         }
@@ -181,5 +205,10 @@ class BookingController extends Controller
         if ($start->format('H:i') < $opening || $end->format('H:i') > $closing) throw ValidationException::withMessages(['start_time' => "Bookings are available only from {$opening} to {$closing}."]);
         if ($start->diffInMinutes($end) > $maximumHours * 60) throw ValidationException::withMessages(['end_time' => "A booking cannot exceed {$maximumHours} hours."]);
         if ($start->greaterThan(now()->addDays($advanceDays))) throw ValidationException::withMessages(['start_time' => "Bookings can only be made {$advanceDays} days in advance."]);
+    }
+
+    private function notifyBooking(?User $recipient, Booking $booking, string $title, string $message, string $event): void
+    {
+        $recipient?->notify(new BookingStatusNotification($booking, $title, trim($message), $event));
     }
 }

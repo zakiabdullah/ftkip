@@ -19,4 +19,18 @@ class Booking extends Model
     public function user(): BelongsTo { return $this->belongsTo(User::class); }
     public function supervisor(): BelongsTo { return $this->belongsTo(User::class, 'supervisor_id'); }
     public function items(): HasMany { return $this->hasMany(BookingItem::class); }
+
+    public function getRouteKey(): mixed
+    {
+        return 'bk-'.str_pad((string) $this->getKey(), 6, '0', STR_PAD_LEFT);
+    }
+
+    public function resolveRouteBinding($value, $field = null): ?self
+    {
+        if (preg_match('/^bk-(\d+)$/', strtolower((string) $value), $matches)) {
+            return $this->whereKey((int) $matches[1])->first();
+        }
+
+        return null;
+    }
 }

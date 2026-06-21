@@ -5,6 +5,23 @@ All notable changes to the **SPMP-FTKIP** project will be documented in this fil
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.0] - 2026-06-21
+
+### Added
+- Added role-scoped Booking Calendar pages with monthly navigation, laboratory filters, booking highlights, and schedule links.
+- Added database-backed booking notifications, an unread count, header notification dropdown, notification centre, and migration for the `notifications` table.
+- Added booking decisions to Booking Details, including an inline rejection-reason form.
+- Added Student dashboard booking summaries and a direct New Booking menu action.
+- Added a username-based Dashboard User Edit route at `/dashboard/users/{username}/edit`.
+
+### Changed
+- Reordered sidebar menus by role priority around each role's booking workflow; notifications now live in the header alert icon.
+- Made Laboratory and Equipment pages read-only for Lecturer/Supervisor and Student roles, while retaining Assistant Engineer and Super Administrator management permissions.
+- Updated booking status wording from `Pending Admin` to `Pending Assistant Engineer` across the interface.
+- Changed Booking URLs to use lowercase references such as `/bookings/bk-000003`; legacy numeric links redirect to the new format.
+- Changed User Management route binding and update/delete links to use usernames instead of numeric user IDs.
+- Replaced browser-based rejection prompts with a guided inline form on Booking Details.
+
 ## [0.9.0] - 2026-06-21
 
 ### Added

@@ -30,9 +30,10 @@ interface Props {
     recent_bookings: DashboardBooking[];
     is_assistant_engineer: boolean;
     is_lecturer: boolean;
+    is_student: boolean;
 }
 
-export default function Dashboard({ stats, recent_users, recent_bookings, is_assistant_engineer: isAssistantEngineer, is_lecturer: isLecturer }: Props) {
+export default function Dashboard({ stats, recent_users, recent_bookings, is_assistant_engineer: isAssistantEngineer, is_lecturer: isLecturer, is_student: isStudent }: Props) {
     const authUser = usePage().props.auth.user;
     const userRole = authUser.roles?.[0]?.name || 'Super Administrator';
 
@@ -42,10 +43,10 @@ export default function Dashboard({ stats, recent_users, recent_bookings, is_ass
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div>
                         <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-                            {isLecturer ? 'Supervisor Dashboard' : isAssistantEngineer ? 'Operations Dashboard' : 'Dashboard Overview'}
+                            {isStudent ? 'My Booking Dashboard' : isLecturer ? 'Supervisor Dashboard' : isAssistantEngineer ? 'Operations Dashboard' : 'Dashboard Overview'}
                         </h2>
                         <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                            {isLecturer ? 'Booking approvals and supervised laboratory activity.' : isAssistantEngineer ? 'Your assigned laboratories, equipment, and booking activity.' : 'Real-time statistics and activities for FTKIP Portal.'}
+                            {isStudent ? 'Create bookings, monitor request status, and prepare for upcoming laboratory sessions.' : isLecturer ? 'Booking approvals and supervised laboratory activity.' : isAssistantEngineer ? 'Your assigned laboratories, equipment, and booking activity.' : 'Real-time statistics and activities for FTKIP Portal.'}
                         </p>
                     </div>
                     <div className="flex items-center gap-3">
@@ -73,7 +74,9 @@ export default function Dashboard({ stats, recent_users, recent_bookings, is_ass
                             Welcome back, {authUser.name}!
                         </h3>
                         <p className="text-sm md:text-base text-zinc-100/90 leading-relaxed">
-                            {isLecturer ? (
+                            {isStudent ? (
+                                <>Create a booking, track its approval progress, and check your upcoming laboratory sessions here.</>
+                            ) : isLecturer ? (
                                 <>Review booking requests assigned to you and monitor upcoming supervised bookings.</>
                             ) : isAssistantEngineer ? (
                                 <>Manage your assigned laboratories, equipment assets, and booking activity from one place.</>
@@ -91,16 +94,16 @@ export default function Dashboard({ stats, recent_users, recent_bookings, is_ass
                     {/* Card 1: Users */}
                     <Card className="border-zinc-200/80 dark:border-zinc-800 shadow-sm hover:shadow-md transition-shadow">
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
-                            <CardTitle className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">{isLecturer ? 'Pending Approvals' : isAssistantEngineer ? 'My Laboratories' : 'Total Users'}</CardTitle>
+                            <CardTitle className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">{isStudent ? 'Pending Requests' : isLecturer ? 'Pending Approvals' : isAssistantEngineer ? 'My Laboratories' : 'Total Users'}</CardTitle>
                             <div className="h-9 w-9 rounded-lg bg-indigo-50 dark:bg-indigo-950/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
                                 <Users className="h-5 w-5" />
                             </div>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-3xl font-bold tracking-tight">{isLecturer ? stats.pending_bookings : isAssistantEngineer ? stats.total_laboratories : stats.total_users}</div>
+                            <div className="text-3xl font-bold tracking-tight">{isStudent ? stats.pending_bookings : isLecturer ? stats.pending_bookings : isAssistantEngineer ? stats.total_laboratories : stats.total_users}</div>
                             <div className="flex items-center gap-1 mt-1 text-xs text-indigo-600 dark:text-indigo-400 font-semibold">
-                                <Link href={route(isLecturer ? 'bookings.index' : isAssistantEngineer ? 'laboratories.index' : 'users.index')} className="flex items-center gap-0.5 hover:underline">
-                                    {isLecturer ? 'Review approvals' : isAssistantEngineer ? 'View my laboratories' : 'Manage accounts'} <ArrowUpRight className="h-3 w-3" />
+                                <Link href={route(isStudent || isLecturer ? 'bookings.index' : isAssistantEngineer ? 'laboratories.index' : 'users.index')} className="flex items-center gap-0.5 hover:underline">
+                                    {isStudent ? 'View my requests' : isLecturer ? 'Review approvals' : isAssistantEngineer ? 'View my laboratories' : 'Manage accounts'} <ArrowUpRight className="h-3 w-3" />
                                 </Link>
                             </div>
                         </CardContent>
@@ -109,16 +112,16 @@ export default function Dashboard({ stats, recent_users, recent_bookings, is_ass
                     {/* Card 2: Laboratories */}
                     <Card className="border-zinc-200/80 dark:border-zinc-800 shadow-sm hover:shadow-md transition-shadow">
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
-                            <CardTitle className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">{isAssistantEngineer ? 'Active Laboratories' : 'Laboratories'}</CardTitle>
+                            <CardTitle className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">{isStudent ? 'Upcoming Bookings' : isAssistantEngineer ? 'Active Laboratories' : 'Laboratories'}</CardTitle>
                             <div className="h-9 w-9 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
                                 <Building2 className="h-5 w-5" />
                             </div>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-3xl font-bold tracking-tight">{isAssistantEngineer ? stats.lab_status_counts.active : stats.total_laboratories}</div>
+                            <div className="text-3xl font-bold tracking-tight">{isStudent ? stats.upcoming_bookings : isAssistantEngineer ? stats.lab_status_counts.active : stats.total_laboratories}</div>
                             <div className="flex items-center gap-1 mt-1 text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
-                                <Link href={route('laboratories.index')} className="flex items-center gap-0.5 hover:underline">
-                                    View laboratories <ArrowUpRight className="h-3 w-3" />
+                                <Link href={route(isStudent ? 'bookings.index' : 'laboratories.index')} className="flex items-center gap-0.5 hover:underline">
+                                    {isStudent ? 'View schedule' : 'View laboratories'} <ArrowUpRight className="h-3 w-3" />
                                 </Link>
                             </div>
                         </CardContent>
@@ -127,16 +130,16 @@ export default function Dashboard({ stats, recent_users, recent_bookings, is_ass
                     {/* Card 3: Equipment */}
                     <Card className="border-zinc-200/80 dark:border-zinc-800 shadow-sm hover:shadow-md transition-shadow">
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
-                            <CardTitle className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">Total Equipment</CardTitle>
+                            <CardTitle className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">{isStudent ? 'Approved Bookings' : 'Total Equipment'}</CardTitle>
                             <div className="h-9 w-9 rounded-lg bg-purple-50 dark:bg-purple-950/30 flex items-center justify-center text-purple-600 dark:text-purple-400">
                                 <Wrench className="h-5 w-5" />
                             </div>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-3xl font-bold tracking-tight">{stats.total_equipment}</div>
+                            <div className="text-3xl font-bold tracking-tight">{isStudent ? stats.approved_bookings : stats.total_equipment}</div>
                             <div className="flex items-center gap-1 mt-1 text-xs text-purple-600 dark:text-purple-400 font-semibold">
                                 <Link href={route('equipment.index')} className="flex items-center gap-0.5 hover:underline">
-                                    Manage equipment <ArrowUpRight className="h-3 w-3" />
+                                    {isStudent ? 'Browse equipment' : 'Manage equipment'} <ArrowUpRight className="h-3 w-3" />
                                 </Link>
                             </div>
                         </CardContent>
@@ -145,7 +148,7 @@ export default function Dashboard({ stats, recent_users, recent_bookings, is_ass
                     {/* Card 4: Bookings */}
                     <Card className="border-zinc-200/80 dark:border-zinc-800 shadow-sm hover:shadow-md transition-shadow">
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
-                            <CardTitle className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">{isAssistantEngineer ? 'Booking Requests' : 'Active Bookings'}</CardTitle>
+                            <CardTitle className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">{isStudent ? 'My Bookings' : isAssistantEngineer ? 'Booking Requests' : 'Active Bookings'}</CardTitle>
                             <div className="h-9 w-9 rounded-lg bg-amber-50 dark:bg-amber-950/30 flex items-center justify-center text-amber-600 dark:text-amber-400">
                                 <CalendarDays className="h-5 w-5" />
                             </div>
@@ -153,9 +156,7 @@ export default function Dashboard({ stats, recent_users, recent_bookings, is_ass
                         <CardContent>
                             <div className="text-3xl font-bold tracking-tight">{stats.total_bookings}</div>
                             <div className="flex items-center gap-1 mt-1 text-xs text-zinc-500">
-                                <span className="font-semibold text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
-                                    System wide metrics <TrendingUp className="h-3.5 w-3.5" />
-                                </span>
+                                {isStudent ? <Link href={route('bookings.index', { create: 1 })} className="font-semibold text-amber-600 dark:text-amber-400 flex items-center gap-0.5 hover:underline">Create a booking <ArrowUpRight className="h-3.5 w-3.5" /></Link> : <span className="font-semibold text-amber-600 dark:text-amber-400 flex items-center gap-0.5">System wide metrics <TrendingUp className="h-3.5 w-3.5" /></span>}
                             </div>
                         </CardContent>
                     </Card>
@@ -163,15 +164,15 @@ export default function Dashboard({ stats, recent_users, recent_bookings, is_ass
 
                 {/* Symmetrical Shadcn Grid Layout */}
                 <div className="gap-4 space-y-4 lg:grid lg:grid-cols-3 lg:space-y-0">
-                    {!isAssistantEngineer && !isLecturer && <TeamMembersCard users={recent_users} />}
-                    {!isAssistantEngineer && !isLecturer && <SubscriptionsCard />}
-                    {!isAssistantEngineer && !isLecturer && <TotalRevenueCard />}
-                    {!isAssistantEngineer && !isLecturer && <ChatWidget />}
-                    {!isAssistantEngineer && !isLecturer && <div className="lg:col-span-2">
+                    {!isAssistantEngineer && !isLecturer && !isStudent && <TeamMembersCard users={recent_users} />}
+                    {!isAssistantEngineer && !isLecturer && !isStudent && <SubscriptionsCard />}
+                    {!isAssistantEngineer && !isLecturer && !isStudent && <TotalRevenueCard />}
+                    {!isAssistantEngineer && !isLecturer && !isStudent && <ChatWidget />}
+                    {!isAssistantEngineer && !isLecturer && !isStudent && <div className="lg:col-span-2">
                         <ExerciseMinutes />
                     </div>}
                     <div className="lg:col-span-3">
-                        <RecentBookingsTable bookings={recent_bookings} />
+                        <RecentBookingsTable bookings={recent_bookings} title={isStudent ? 'My Recent Bookings' : undefined} description={isStudent ? 'Track the latest status of your laboratory booking requests.' : undefined} />
                     </div>
                 </div>
             </div>

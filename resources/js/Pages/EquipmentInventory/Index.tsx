@@ -18,12 +18,15 @@ interface Props {
     laboratories: Pick<Laboratory, 'id' | 'name' | 'code'>[];
     filters: { search?: string; laboratory_id?: string; status?: string };
     is_assistant_engineer: boolean;
+    is_lecturer: boolean;
+    is_student: boolean;
     summary: { item_count: number; total_quantity: number; available_quantity: number; attention_quantity: number };
 }
 
 const statuses = ['available', 'maintenance', 'damaged', 'retired'] as const;
 
-export default function Index({ items, laboratories, filters, is_assistant_engineer: isAssistantEngineer, summary }: Props) {
+export default function Index({ items, laboratories, filters, is_assistant_engineer: isAssistantEngineer, is_lecturer: isLecturer, is_student: isStudent, summary }: Props) {
+    const canManageInventory = !isLecturer && !isStudent;
     const [search, setSearch] = useState(filters.search || '');
     const [laboratoryId, setLaboratoryId] = useState(filters.laboratory_id || 'all');
     const [status, setStatus] = useState(filters.status || 'all');
@@ -70,9 +73,9 @@ export default function Index({ items, laboratories, filters, is_assistant_engin
 
     return (
         <AuthenticatedLayout header={<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div><h2 className="text-2xl font-bold tracking-tight">{isAssistantEngineer ? 'My Equipment' : 'Equipment'}</h2>
-                <p className="mt-1 text-sm text-zinc-500">{isAssistantEngineer ? 'Inventory assigned to your laboratories.' : 'Bulk inventory, equipment sets, and software licenses.'}</p></div>
-            <Button onClick={() => openEditor()} className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm flex items-center gap-1.5 self-start sm:self-auto"><PackagePlus className="h-4 w-4" />Add Equipment</Button>
+            <div><h2 className="text-2xl font-bold tracking-tight">{isStudent ? 'Browse Equipment' : isAssistantEngineer ? 'My Equipment' : 'Equipment'}</h2>
+                <p className="mt-1 text-sm text-zinc-500">{isStudent ? 'Equipment information to help you plan a booking.' : isLecturer ? 'Equipment information for booking review and planning.' : isAssistantEngineer ? 'Inventory assigned to your laboratories.' : 'Bulk inventory, equipment sets, and software licenses.'}</p></div>
+            {canManageInventory && <Button onClick={() => openEditor()} className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm flex items-center gap-1.5 self-start sm:self-auto"><PackagePlus className="h-4 w-4" />Add Equipment</Button>}
         </div>}>
             <Head title="Equipment" />
             <div className="mx-auto max-w-7xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
@@ -89,8 +92,8 @@ export default function Index({ items, laboratories, filters, is_assistant_engin
                     <Button type="submit" variant="secondary">Apply</Button></div>
                 </form></CardContent></Card>
 
-                <Card className="overflow-hidden border-zinc-200/80 dark:border-zinc-800 shadow-sm"><div className="overflow-x-auto"><Table className="table-fixed"><TableHeader className="bg-zinc-50 dark:bg-zinc-900/30"><TableRow><TableHead className="w-[35%] font-semibold">Equipment Details</TableHead><TableHead className="w-[22%] font-semibold">Laboratory</TableHead><TableHead className="text-center font-semibold">Quantity</TableHead><TableHead className="font-semibold">Type</TableHead><TableHead className="font-semibold">Status</TableHead><TableHead className="w-[120px] text-right font-semibold">Actions</TableHead></TableRow></TableHeader><TableBody>
-                    {items.data.length === 0 ? <TableRow><TableCell colSpan={6} className="h-32 text-center text-zinc-500">No equipment items found.</TableCell></TableRow> : items.data.map((item) => <TableRow key={item.id} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-900/10"><TableCell className="whitespace-normal break-words font-medium text-zinc-900 dark:text-zinc-50">{item.name}</TableCell><TableCell className="whitespace-normal break-words"><span className="font-mono font-semibold text-indigo-600 dark:text-indigo-400">{item.laboratory?.code}</span><span className="block text-xs text-zinc-500">{item.laboratory?.name}</span></TableCell><TableCell className="text-center font-semibold">{item.quantity}</TableCell><TableCell className="capitalize text-zinc-600 dark:text-zinc-400">{item.unit_type}</TableCell><TableCell>{statusBadge(item.status)}</TableCell><TableCell className="text-right"><div className="flex justify-end gap-1.5"><Button variant="ghost" size="icon-sm" title="Edit equipment" onClick={() => openEditor(item)}><Edit2 className="h-4 w-4" /></Button>{!isAssistantEngineer && <Button variant="ghost" size="icon-sm" className="text-rose-600" title="Delete item" onClick={() => { if (confirm(`Delete ${item.name}?`)) router.delete(route('equipment.destroy', item.id)); }}><Trash2 className="h-4 w-4" /></Button>}</div></TableCell></TableRow>)}
+                <Card className="overflow-hidden border-zinc-200/80 dark:border-zinc-800 shadow-sm"><div className="overflow-x-auto"><Table className="table-fixed"><TableHeader className="bg-zinc-50 dark:bg-zinc-900/30"><TableRow><TableHead className="w-[35%] font-semibold">Equipment Details</TableHead><TableHead className="w-[22%] font-semibold">Laboratory</TableHead><TableHead className="text-center font-semibold">Quantity</TableHead><TableHead className="font-semibold">Type</TableHead><TableHead className="font-semibold">Status</TableHead>{canManageInventory && <TableHead className="w-[120px] text-right font-semibold">Actions</TableHead>}</TableRow></TableHeader><TableBody>
+                    {items.data.length === 0 ? <TableRow><TableCell colSpan={canManageInventory ? 6 : 5} className="h-32 text-center text-zinc-500">No equipment items found.</TableCell></TableRow> : items.data.map((item) => <TableRow key={item.id} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-900/10"><TableCell className="whitespace-normal break-words font-medium text-zinc-900 dark:text-zinc-50">{item.name}</TableCell><TableCell className="whitespace-normal break-words"><span className="font-mono font-semibold text-indigo-600 dark:text-indigo-400">{item.laboratory?.code}</span><span className="block text-xs text-zinc-500">{item.laboratory?.name}</span></TableCell><TableCell className="text-center font-semibold">{item.quantity}</TableCell><TableCell className="capitalize text-zinc-600 dark:text-zinc-400">{item.unit_type}</TableCell><TableCell>{statusBadge(item.status)}</TableCell>{canManageInventory && <TableCell className="text-right"><div className="flex justify-end gap-1.5"><Button variant="ghost" size="icon-sm" title="Edit equipment" onClick={() => openEditor(item)}><Edit2 className="h-4 w-4" /></Button>{!isAssistantEngineer && <Button variant="ghost" size="icon-sm" className="text-rose-600" title="Delete item" onClick={() => { if (confirm(`Delete ${item.name}?`)) router.delete(route('equipment.destroy', item.id)); }}><Trash2 className="h-4 w-4" /></Button>}</div></TableCell>}</TableRow>)}
                 </TableBody></Table></div>{items.links && items.links.length > 3 && <div className="flex items-center justify-between border-t border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-4 py-3 sm:px-6"><p className="text-sm text-zinc-700 dark:text-zinc-300">Showing <span className="font-medium">{items.from}</span> to <span className="font-medium">{items.to}</span> of <span className="font-medium">{items.total}</span> results</p><div className="flex gap-1.5">{items.links.map((link, idx) => <Button key={idx} variant={link.active ? 'default' : 'outline'} size="sm" disabled={!link.url} onClick={() => link.url && router.get(link.url, {}, { preserveState: true })} dangerouslySetInnerHTML={{ __html: link.label }} />)}</div></div>}</Card>
             </div>
 

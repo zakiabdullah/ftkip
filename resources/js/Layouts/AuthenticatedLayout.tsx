@@ -38,6 +38,7 @@ import {
     Sun,
     Moon,
     Monitor,
+    Bell,
 } from 'lucide-react';
 
 type Theme = 'light' | 'dark' | 'system';
@@ -51,6 +52,7 @@ export default function Authenticated({
     const isAssistantEngineer = userRole === 'Assistant Engineer';
     const isLecturer = userRole === 'Lecturer / Supervisor';
     const canManageUsers = userRole === 'Super Administrator';
+    const isStudent = !isAssistantEngineer && !isLecturer && !canManageUsers;
 
     const userInitials = user.name
         ? user.name
@@ -102,6 +104,9 @@ export default function Authenticated({
     const isLaboratoriesActive = route().current('laboratories.*');
     const isEquipmentActive = route().current('equipment.*');
     const isBookingsActive = route().current('bookings.*');
+    const isBookingCalendarActive = route().current('booking-calendar.*');
+    const unreadNotifications = usePage().props.notifications?.unread_count || 0;
+    const recentNotifications = usePage().props.notifications?.recent || [];
     const isSettingsActive = route().current('settings.*');
     const isUsersActive = route().current('users.*');
 
@@ -174,18 +179,78 @@ export default function Authenticated({
                             {/* Daily Operations Group */}
                             <div className="px-2 py-1.5">
                                 <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-450 dark:text-zinc-500 group-data-[collapsible=icon]:hidden">
-                                    {isLecturer ? 'Supervision' : 'Daily Operations'}
+                                    {isStudent ? 'Booking & Resources' : isLecturer ? 'Supervision' : 'Daily Operations'}
                                 </span>
                                 <SidebarMenu className="mt-1.5 gap-1">
+                                    {isStudent && <>
+                                        <SidebarMenuItem>
+                                            <SidebarMenuButton asChild isActive={isBookingsActive && route().params?.create === '1'} tooltip="New Booking">
+                                                <Link href={route('bookings.index', { create: 1 })} className="flex items-center gap-3">
+                                                    <CalendarDays className="h-4.5 w-4.5 shrink-0" />
+                                                    <span className="group-data-[collapsible=icon]:hidden">New Booking</span>
+                                                </Link>
+                                            </SidebarMenuButton>
+                                        </SidebarMenuItem>
+                                        <SidebarMenuItem>
+                                            <SidebarMenuButton asChild isActive={isBookingsActive && route().params?.create !== '1'} tooltip="My Bookings">
+                                                <Link href={route('bookings.index')} className="flex items-center gap-3">
+                                                    <CalendarDays className="h-4.5 w-4.5 shrink-0" />
+                                                    <span className="group-data-[collapsible=icon]:hidden">My Bookings</span>
+                                                </Link>
+                                            </SidebarMenuButton>
+                                        </SidebarMenuItem>
+                                        <SidebarMenuItem>
+                                            <SidebarMenuButton asChild isActive={isBookingCalendarActive} tooltip="Booking Calendar">
+                                                <Link href={route('booking-calendar.index')} className="flex items-center gap-3">
+                                                    <CalendarDays className="h-4.5 w-4.5 shrink-0" />
+                                                    <span className="group-data-[collapsible=icon]:hidden">Booking Calendar</span>
+                                                </Link>
+                                            </SidebarMenuButton>
+                                        </SidebarMenuItem>
+                                    </>}
+                                    {isLecturer && <SidebarMenuItem>
+                                        <SidebarMenuButton asChild isActive={isBookingsActive} tooltip="Booking Approvals">
+                                            <Link href={route('bookings.index')} className="flex items-center gap-3">
+                                                <CalendarDays className="h-4.5 w-4.5 shrink-0" />
+                                                <span className="group-data-[collapsible=icon]:hidden">Booking Approvals</span>
+                                            </Link>
+                                        </SidebarMenuButton>
+                                    </SidebarMenuItem>}
+                                    {isLecturer && <SidebarMenuItem>
+                                        <SidebarMenuButton asChild isActive={isBookingCalendarActive} tooltip="Booking Calendar">
+                                            <Link href={route('booking-calendar.index')} className="flex items-center gap-3">
+                                                <CalendarDays className="h-4.5 w-4.5 shrink-0" />
+                                                <span className="group-data-[collapsible=icon]:hidden">Booking Calendar</span>
+                                            </Link>
+                                        </SidebarMenuButton>
+                                    </SidebarMenuItem>}
+                                    {!isLecturer && !isStudent && <>
+                                        <SidebarMenuItem>
+                                            <SidebarMenuButton asChild isActive={isBookingsActive} tooltip={isAssistantEngineer ? 'Bookings for My Laboratories' : 'All Bookings'}>
+                                                <Link href={route('bookings.index')} className="flex items-center gap-3">
+                                                    <CalendarDays className="h-4.5 w-4.5 shrink-0" />
+                                                    <span className="group-data-[collapsible=icon]:hidden">{isAssistantEngineer ? 'Bookings for My Laboratories' : 'All Bookings'}</span>
+                                                </Link>
+                                            </SidebarMenuButton>
+                                        </SidebarMenuItem>
+                                        <SidebarMenuItem>
+                                            <SidebarMenuButton asChild isActive={isBookingCalendarActive} tooltip="Booking Calendar">
+                                                <Link href={route('booking-calendar.index')} className="flex items-center gap-3">
+                                                    <CalendarDays className="h-4.5 w-4.5 shrink-0" />
+                                                    <span className="group-data-[collapsible=icon]:hidden">Booking Calendar</span>
+                                                </Link>
+                                            </SidebarMenuButton>
+                                        </SidebarMenuItem>
+                                    </>}
                                     <SidebarMenuItem>
                                         <SidebarMenuButton
                                             asChild
                                             isActive={isLaboratoriesActive}
-                                            tooltip={isAssistantEngineer ? 'My Laboratories' : 'Laboratories'}
+                                            tooltip={isStudent ? 'Browse Laboratories' : isAssistantEngineer ? 'My Laboratories' : 'Laboratories'}
                                         >
                                             <Link href={route('laboratories.index')} className="flex items-center gap-3">
                                                 <Building2 className="h-4.5 w-4.5 shrink-0" />
-                                                <span className="group-data-[collapsible=icon]:hidden">{isAssistantEngineer ? 'My Laboratories' : 'Laboratories'}</span>
+                                                <span className="group-data-[collapsible=icon]:hidden">{isStudent ? 'Browse Laboratories' : isAssistantEngineer ? 'My Laboratories' : 'Laboratories'}</span>
                                             </Link>
                                         </SidebarMenuButton>
                                     </SidebarMenuItem>
@@ -194,20 +259,11 @@ export default function Authenticated({
                                         <SidebarMenuButton
                                             asChild
                                             isActive={isEquipmentActive}
-                                            tooltip={isAssistantEngineer ? 'My Equipment' : 'Equipment'}
+                                            tooltip={isStudent ? 'Browse Equipment' : isAssistantEngineer ? 'My Equipment' : 'Equipment'}
                                         >
                                             <Link href={route('equipment.index')} className="flex items-center gap-3">
                                                 <Wrench className="h-4.5 w-4.5 shrink-0" />
-                                                <span className="group-data-[collapsible=icon]:hidden">{isAssistantEngineer ? 'My Equipment' : 'Equipment'}</span>
-                                            </Link>
-                                        </SidebarMenuButton>
-                                    </SidebarMenuItem>
-
-                                    <SidebarMenuItem>
-                                        <SidebarMenuButton asChild isActive={isBookingsActive} tooltip={isLecturer ? 'Booking Approvals' : 'Bookings'}>
-                                            <Link href={route('bookings.index')} className="flex items-center gap-3">
-                                                <CalendarDays className="h-4.5 w-4.5 shrink-0" />
-                                                <span className="group-data-[collapsible=icon]:hidden">{isLecturer ? 'Booking Approvals' : 'Bookings'}</span>
+                                                <span className="group-data-[collapsible=icon]:hidden">{isStudent ? 'Browse Equipment' : isAssistantEngineer ? 'My Equipment' : 'Equipment'}</span>
                                             </Link>
                                         </SidebarMenuButton>
                                     </SidebarMenuItem>
@@ -311,6 +367,24 @@ export default function Authenticated({
 
                             {/* Top Right Quick Actions */}
                             <div className="flex items-center gap-3">
+                                {/* Notifications */}
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <button className="relative inline-flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-200/80 bg-white text-zinc-500 transition-colors hover:text-zinc-900 focus:outline-none dark:border-zinc-800/80 dark:bg-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-50">
+                                            <Bell className="h-4.5 w-4.5" />
+                                            {unreadNotifications > 0 && <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-600 px-1 text-[9px] font-bold text-white">{unreadNotifications > 9 ? '9+' : unreadNotifications}</span>}
+                                            <span className="sr-only">Notifications</span>
+                                        </button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className="w-80 rounded-lg p-1.5">
+                                        <div className="flex items-center justify-between px-2 py-1.5"><span className="text-sm font-semibold">Notifications</span>{unreadNotifications > 0 && <span className="text-xs font-medium text-indigo-600">{unreadNotifications} unread</span>}</div>
+                                        <DropdownMenuSeparator />
+                                        {recentNotifications.length === 0 ? <p className="px-2 py-6 text-center text-sm text-zinc-500">No notifications yet.</p> : recentNotifications.map((notification) => <DropdownMenuItem key={notification.id} asChild className="h-auto cursor-pointer p-0 focus:bg-zinc-50 dark:focus:bg-zinc-900"><Link href={notification.url || route('notifications.index')} className="block w-full px-2 py-2.5"><p className={`text-sm ${notification.read_at ? 'font-medium' : 'font-semibold text-zinc-900 dark:text-zinc-50'}`}>{notification.title}</p><p className="mt-0.5 line-clamp-2 text-xs text-zinc-500">{notification.message}</p></Link></DropdownMenuItem>)}
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem asChild className="justify-center text-sm font-semibold text-indigo-600 focus:text-indigo-700"><Link href={route('notifications.index')}>View all notifications</Link></DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+
                                 {/* Theme Switcher */}
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>

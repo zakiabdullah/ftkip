@@ -43,9 +43,11 @@ import { DashboardBooking } from "@/types";
 
 interface Props {
   bookings: DashboardBooking[];
+  title?: string;
+  description?: string;
 }
 
-export function RecentBookingsTable({ bookings }: Props) {
+export function RecentBookingsTable({ bookings, title = "Recent Booking Requests", description = "View and manage recent laboratory reservation activities." }: Props) {
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
   const [globalFilter, setGlobalFilter] = React.useState("");
 
@@ -66,7 +68,7 @@ export function RecentBookingsTable({ bookings }: Props) {
       case "pending_admin":
         return (
           <Badge className="bg-blue-500 hover:bg-blue-600 text-white flex items-center gap-1 w-fit">
-            <Clock className="h-3 w-3" /> Pending Admin
+            <Clock className="h-3 w-3" /> Pending Assistant Engineer
           </Badge>
         );
       case "rejected":
@@ -189,8 +191,8 @@ export function RecentBookingsTable({ bookings }: Props) {
   return (
     <Card className="h-full">
       <CardHeader>
-        <CardTitle>Recent Booking Requests</CardTitle>
-        <CardDescription>View and manage recent laboratory reservation activities.</CardDescription>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
         <CardAction>
           <div className="flex gap-2">
             <Input

@@ -20,6 +20,7 @@ class DashboardController extends Controller
         $user = $request->user();
         $isAssistantEngineer = $user->hasRole('Assistant Engineer');
         $isLecturer = $user->hasRole('Lecturer / Supervisor');
+        $isStudent = ! $isAssistantEngineer && ! $isLecturer && ! $user->hasRole('Super Administrator');
         $laboratoriesQuery = Laboratory::query();
 
         if ($isAssistantEngineer) {
@@ -35,6 +36,8 @@ class DashboardController extends Controller
             $bookingsQuery->whereIn('laboratory_id', $laboratoryIds);
         } elseif ($isLecturer) {
             $bookingsQuery->where('supervisor_id', $user->id);
+        } elseif ($isStudent) {
+            $bookingsQuery->where('user_id', $user->id);
         }
 
         // Core counts
@@ -86,6 +89,8 @@ class DashboardController extends Controller
             $recentBookingsQuery->whereIn('bookings.laboratory_id', $laboratoryIds);
         } elseif ($isLecturer) {
             $recentBookingsQuery->where('bookings.supervisor_id', $user->id);
+        } elseif ($isStudent) {
+            $recentBookingsQuery->where('bookings.user_id', $user->id);
         }
 
         $recentBookings = $recentBookingsQuery->latest('bookings.created_at')->limit(5)->get();
@@ -98,13 +103,16 @@ class DashboardController extends Controller
                 'total_bookings' => $totalBookings,
                 'lab_status_counts' => $labStatusCounts,
                 'equipment_status_counts' => $equipmentStatusCounts,
-                'pending_bookings' => (clone $bookingsQuery)->where('status', $isLecturer ? 'pending_supervisor' : 'pending_admin')->count(),
+                'pending_bookings' => (clone $bookingsQuery)->whereIn('status', $isStudent ? ['pending_supervisor', 'pending_admin'] : [$isLecturer ? 'pending_supervisor' : 'pending_admin'])->count(),
+                'approved_bookings' => (clone $bookingsQuery)->where('status', 'approved')->count(),
+                'upcoming_bookings' => (clone $bookingsQuery)->where('status', 'approved')->where('start_time', '>=', now())->count(),
             ],
             'recent_users' => $recentUsers,
             'recent_equipment' => $recentEquipment,
             'recent_bookings' => $recentBookings,
             'is_assistant_engineer' => $isAssistantEngineer,
             'is_lecturer' => $isLecturer,
+            'is_student' => $isStudent,
         ]);
     }
 }

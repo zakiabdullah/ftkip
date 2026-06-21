@@ -20,6 +20,8 @@ class LaboratoryController extends Controller
     {
         $query = Laboratory::with('responsibleOfficer');
         $isAssistantEngineer = $request->user()->hasRole('Assistant Engineer');
+        $isLecturer = $request->user()->hasRole('Lecturer / Supervisor');
+        $isStudent = ! $isAssistantEngineer && ! $isLecturer && ! $request->user()->hasRole('Super Administrator');
 
         if ($isAssistantEngineer) {
             $query->where('responsible_officer_id', $request->user()->id);
@@ -48,6 +50,8 @@ class LaboratoryController extends Controller
             'users' => $users,
             'filters' => $request->only(['search', 'status']),
             'is_assistant_engineer' => $isAssistantEngineer,
+            'is_lecturer' => $isLecturer,
+            'is_student' => $isStudent,
         ]);
     }
 
@@ -56,7 +60,7 @@ class LaboratoryController extends Controller
      */
     public function store(StoreLaboratoryRequest $request): RedirectResponse
     {
-        abort_if($request->user()->hasRole('Assistant Engineer'), 403);
+        abort_unless($request->user()->hasRole('Super Administrator'), 403);
 
         Laboratory::create($request->validated());
 
@@ -75,6 +79,8 @@ class LaboratoryController extends Controller
             return redirect()->route('laboratories.index')->with('success', 'Laboratory status updated successfully.');
         }
 
+        abort_unless($request->user()->hasRole('Super Administrator'), 403);
+
         $laboratory->update($request->validated());
 
         return redirect()->route('laboratories.index')->with('success', 'Laboratory updated successfully.');
@@ -85,7 +91,7 @@ class LaboratoryController extends Controller
      */
     public function destroy(Laboratory $laboratory): RedirectResponse
     {
-        abort_if(request()->user()->hasRole('Assistant Engineer'), 403);
+        abort_unless(request()->user()->hasRole('Super Administrator'), 403);
 
         $laboratory->delete();
 

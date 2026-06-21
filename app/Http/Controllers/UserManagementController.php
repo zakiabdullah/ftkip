@@ -20,6 +20,16 @@ class UserManagementController extends Controller
      */
     public function index(Request $request): Response
     {
+        return $this->renderIndex($request);
+    }
+
+    public function edit(Request $request, User $user): Response
+    {
+        return $this->renderIndex($request, $user->load('roles'));
+    }
+
+    private function renderIndex(Request $request, ?User $editUser = null): Response
+    {
         $query = User::with('roles');
 
         if ($request->filled('search')) {
@@ -45,6 +55,7 @@ class UserManagementController extends Controller
             'users' => $users,
             'roles' => $roles,
             'filters' => $request->only(['search', 'role']),
+            'edit_user' => $editUser,
         ]);
     }
 

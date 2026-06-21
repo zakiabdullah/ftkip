@@ -92,6 +92,8 @@ export interface DashboardStats {
     total_equipment: number;
     total_bookings: number;
     pending_bookings: number;
+    approved_bookings: number;
+    upcoming_bookings: number;
     lab_status_counts: {
         active: number;
         inactive: number;
@@ -116,5 +118,9 @@ export type PageProps<
     flash?: {
         success?: string;
         error?: string;
+    };
+    notifications?: {
+        unread_count: number;
+        recent: Array<{ id: string; title: string; message: string; url?: string; read_at?: string }>;
     };
 };

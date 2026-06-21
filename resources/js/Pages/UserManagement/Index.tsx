@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Head, useForm, router, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Button } from '@/Components/ui/button';
@@ -50,16 +50,19 @@ interface Props {
         search?: string;
         role?: string;
     };
+    edit_user?: User;
 }
 
-export default function Index({ users, roles, filters }: Props) {
+export default function Index({ users, roles, filters, edit_user: editUser }: Props) {
     const authUser = usePage().props.auth.user;
     const [search, setSearch] = useState(filters.search || '');
     const [roleFilter, setRoleFilter] = useState(filters.role || 'all');
     const [isOpen, setIsOpen] = useState(false);
     const [editId, setEditId] = useState<number | null>(null);
+    const [editUsername, setEditUsername] = useState<string | null>(null);
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
     const [deleteId, setDeleteId] = useState<number | null>(null);
+    const [deleteUsername, setDeleteUsername] = useState<string | null>(null);
 
     const { data, setData, post, patch, processing, errors, reset, clearErrors } = useForm({
         name: '',
@@ -92,12 +95,14 @@ export default function Index({ users, roles, filters }: Props) {
         clearErrors();
         reset();
         setEditId(null);
+        setEditUsername(null);
         setIsOpen(true);
     };
 
     const openEditModal = (u: User) => {
         clearErrors();
         setEditId(u.id);
+        setEditUsername(u.username);
         setData({
             name: u.name,
             username: u.username,
@@ -109,10 +114,14 @@ export default function Index({ users, roles, filters }: Props) {
         setIsOpen(true);
     };
 
+    useEffect(() => {
+        if (editUser) openEditModal(editUser);
+    }, [editUser]);
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (editId) {
-            patch(route('users.update', editId), {
+        if (editId && editUsername) {
+            patch(route('users.update', editUsername), {
                 onSuccess: () => {
                     setIsOpen(false);
                     reset();
@@ -128,15 +137,16 @@ export default function Index({ users, roles, filters }: Props) {
         }
     };
 
-    const confirmDelete = (id: number) => {
+    const confirmDelete = (id: number, username: string) => {
         if (id === authUser.id) return; // Prevent deleting self UI side
         setDeleteId(id);
+        setDeleteUsername(username);
         setIsDeleteOpen(true);
     };
 
     const handleDelete = () => {
-        if (deleteId) {
-            router.delete(route('users.destroy', deleteId), {
+        if (deleteId && deleteUsername) {
+            router.delete(route('users.destroy', deleteUsername), {
                 onSuccess: () => setIsDeleteOpen(false),
             });
         }
@@ -300,7 +310,7 @@ export default function Index({ users, roles, filters }: Props) {
                                                     <Button
                                                         variant="ghost"
                                                         size="icon-sm"
-                                                        onClick={() => openEditModal(u)}
+                                                        onClick={() => router.get(route('dashboard.users.edit', u.username))}
                                                         className="text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200"
                                                     >
                                                         <Edit2 className="h-4 w-4" />
@@ -309,7 +319,7 @@ export default function Index({ users, roles, filters }: Props) {
                                                         variant="ghost"
                                                         size="icon-sm"
                                                         disabled={u.id === authUser.id}
-                                                        onClick={() => confirmDelete(u.id)}
+                                                        onClick={() => confirmDelete(u.id, u.username)}
                                                         className={`text-rose-600 hover:text-rose-900 hover:bg-rose-50 dark:hover:bg-rose-950/20 ${u.id === authUser.id ? 'opacity-30 cursor-not-allowed hover:bg-transparent dark:hover:bg-transparent' : ''}`}
                                                     >
                                                         <Trash2 className="h-4 w-4" />

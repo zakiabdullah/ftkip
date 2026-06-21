@@ -50,9 +50,12 @@ interface Props {
         status?: string;
     };
     is_assistant_engineer: boolean;
+    is_lecturer: boolean;
+    is_student: boolean;
 }
 
-export default function Index({ laboratories, users, filters, is_assistant_engineer: isAssistantEngineer }: Props) {
+export default function Index({ laboratories, users, filters, is_assistant_engineer: isAssistantEngineer, is_lecturer: isLecturer, is_student: isStudent }: Props) {
+    const canManageLaboratories = !isLecturer && !isStudent;
     const [search, setSearch] = useState(filters.search || '');
     const [statusFilter, setStatusFilter] = useState(filters.status || 'all');
     const [isOpen, setIsOpen] = useState(false);
@@ -159,11 +162,13 @@ export default function Index({ laboratories, users, filters, is_assistant_engin
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
                         <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
-                            {isAssistantEngineer ? 'My Laboratories' : 'Laboratory Management'}
+                            {isStudent ? 'Browse Laboratories' : isLecturer ? 'Laboratories' : isAssistantEngineer ? 'My Laboratories' : 'Laboratory Management'}
                         </h2>
                         {isAssistantEngineer && <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Laboratories assigned to you and their current operational status.</p>}
+                        {isLecturer && <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Laboratory information for booking review and planning.</p>}
+                        {isStudent && <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Laboratory information to help you plan a booking.</p>}
                     </div>
-                    {!isAssistantEngineer && <Button
+                    {!isAssistantEngineer && canManageLaboratories && <Button
                         onClick={openCreateModal}
                         className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm flex items-center gap-1.5 self-start sm:self-auto"
                     >
@@ -239,13 +244,13 @@ export default function Index({ laboratories, users, filters, is_assistant_engin
                                     <TableHead className="w-[100px] text-center font-semibold">Capacity</TableHead>
                                     <TableHead className="w-[130px] font-semibold">Status</TableHead>
                                     {!isAssistantEngineer && <TableHead className="font-semibold">Responsible Officer</TableHead>}
-                                    <TableHead className="w-[120px] text-right font-semibold">Actions</TableHead>
+                                    {canManageLaboratories && <TableHead className="w-[120px] text-right font-semibold">Actions</TableHead>}
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {laboratories.data.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={isAssistantEngineer ? 6 : 7} className="h-32 text-center text-zinc-500">
+                                        <TableCell colSpan={isAssistantEngineer || isLecturer || isStudent ? 6 : 7} className="h-32 text-center text-zinc-500">
                                             No laboratories found.
                                         </TableCell>
                                     </TableRow>
@@ -273,7 +278,7 @@ export default function Index({ laboratories, users, filters, is_assistant_engin
                                                     {lab.responsible_officer?.email}
                                                 </span>
                                             </TableCell>}
-                                            <TableCell className="text-right">
+                                            {canManageLaboratories && <TableCell className="text-right">
                                                 <div className="flex justify-end gap-1.5">
                                                     <Button
                                                         variant="ghost"
@@ -293,7 +298,7 @@ export default function Index({ laboratories, users, filters, is_assistant_engin
                                                         <Trash2 className="h-4 w-4" />
                                                     </Button>}
                                                 </div>
-                                            </TableCell>
+                                            </TableCell>}
                                         </TableRow>
                                     ))
                                 )}

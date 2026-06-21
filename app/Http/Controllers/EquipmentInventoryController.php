@@ -14,6 +14,8 @@ class EquipmentInventoryController extends Controller
     public function index(Request $request): Response
     {
         $isAssistantEngineer = $request->user()->hasRole('Assistant Engineer');
+        $isLecturer = $request->user()->hasRole('Lecturer / Supervisor');
+        $isStudent = ! $isAssistantEngineer && ! $isLecturer && ! $request->user()->hasRole('Super Administrator');
         $laboratories = Laboratory::query();
 
         if ($isAssistantEngineer) {
@@ -47,12 +49,15 @@ class EquipmentInventoryController extends Controller
             'laboratories' => $laboratories->select('id', 'name', 'code')->orderBy('name')->get(),
             'filters' => $request->only(['search', 'laboratory_id', 'status']),
             'is_assistant_engineer' => $isAssistantEngineer,
+            'is_lecturer' => $isLecturer,
+            'is_student' => $isStudent,
             'summary' => $summary,
         ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
+        $this->ensureCanManageInventory($request);
         $data = $this->validatedData($request);
         $this->ensureLaboratoryAccess($request, $data['laboratory_id']);
 
@@ -63,6 +68,7 @@ class EquipmentInventoryController extends Controller
 
     public function update(Request $request, EquipmentInventoryItem $inventory): RedirectResponse
     {
+        $this->ensureCanManageInventory($request);
         $data = $this->validatedData($request);
         $this->ensureLaboratoryAccess($request, $inventory->laboratory_id);
         $this->ensureLaboratoryAccess($request, $data['laboratory_id']);
@@ -74,7 +80,7 @@ class EquipmentInventoryController extends Controller
 
     public function destroy(Request $request, EquipmentInventoryItem $inventory): RedirectResponse
     {
-        abort_if($request->user()->hasRole('Assistant Engineer'), 403);
+        abort_unless($request->user()->hasRole('Super Administrator'), 403);
 
         $inventory->delete();
 
@@ -105,5 +111,10 @@ class EquipmentInventoryController extends Controller
                 ->exists(),
             403,
         );
+    }
+
+    private function ensureCanManageInventory(Request $request): void
+    {
+        abort_unless($request->user()->hasAnyRole(['Super Administrator', 'Assistant Engineer']), 403);
     }
 }

@@ -44,6 +44,11 @@ class User extends Authenticatable
         return $this->hasMany(Laboratory::class, 'responsible_officer_id');
     }
 
+    public function getRouteKeyName(): string
+    {
+        return 'username';
+    }
+
     /**
      * Get all equipment across all laboratories managed by this user.
      * 
