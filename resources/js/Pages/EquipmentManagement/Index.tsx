@@ -184,13 +184,13 @@ export default function Index({ equipment, laboratories, filters }: Props) {
             header={
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
-                        Equipment Management
+                        Equipment Assets
                     </h2>
                     <Button
                         onClick={openCreateModal}
                         className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm flex items-center gap-1.5 self-start sm:self-auto"
                     >
-                        <Plus className="h-4 w-4" /> Add Equipment
+                        <Plus className="h-4 w-4" /> Add Equipment Asset
                     </Button>
                 </div>
             }
@@ -390,7 +390,7 @@ export default function Index({ equipment, laboratories, filters }: Props) {
                 <DialogContent className="sm:max-w-[480px]">
                     <DialogHeader>
                         <DialogTitle>
-                            {editId ? 'Edit Equipment' : 'Add Equipment'}
+                            {editId ? 'Edit Equipment Asset' : 'Add Equipment Asset'}
                         </DialogTitle>
                     </DialogHeader>
 

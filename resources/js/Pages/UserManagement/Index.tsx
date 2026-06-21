@@ -146,7 +146,7 @@ export default function Index({ users, roles, filters }: Props) {
         switch (roleName) {
             case 'Super Administrator':
                 return 'bg-red-500 hover:bg-red-600 text-white font-medium';
-            case 'Assistant Engineer / Admin':
+            case 'Assistant Engineer':
                 return 'bg-blue-500 hover:bg-blue-600 text-white font-medium';
             case 'Lecturer / Supervisor':
                 return 'bg-purple-500 hover:bg-purple-600 text-white font-medium';

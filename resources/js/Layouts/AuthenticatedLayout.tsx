@@ -28,6 +28,8 @@ import {
     LayoutDashboard,
     Building2,
     Wrench,
+    CalendarDays,
+    Settings,
     Users,
     LogOut,
     User,
@@ -46,6 +48,8 @@ export default function Authenticated({
 }: PropsWithChildren<{ header?: ReactNode }>) {
     const user = usePage().props.auth.user;
     const userRole = user.roles?.[0]?.name || 'Super Administrator';
+    const isAssistantEngineer = userRole === 'Assistant Engineer';
+    const canManageUsers = userRole === 'Super Administrator';
 
     const userInitials = user.name
         ? user.name
@@ -96,6 +100,8 @@ export default function Authenticated({
     const isDashboardActive = route().current('dashboard');
     const isLaboratoriesActive = route().current('laboratories.*');
     const isEquipmentActive = route().current('equipment.*');
+    const isBookingsActive = route().current('bookings.*');
+    const isSettingsActive = route().current('settings.*');
     const isUsersActive = route().current('users.*');
 
     const getBreadcrumbs = () => {
@@ -103,11 +109,15 @@ export default function Authenticated({
             return [{ label: 'Overview', url: route('dashboard') }, { label: 'Dashboard', active: true }];
         }
         if (route().current('laboratories.*')) {
-            return [{ label: 'Management', url: '#' }, { label: 'Laboratories', active: true }];
+            return [{ label: isAssistantEngineer ? 'Daily Operations' : 'Management', url: '#' }, { label: isAssistantEngineer ? 'My Laboratories' : 'Laboratories', active: true }];
         }
         if (route().current('equipment.*')) {
-            return [{ label: 'Management', url: '#' }, { label: 'Equipment', active: true }];
+            return [{ label: isAssistantEngineer ? 'Daily Operations' : 'Management', url: '#' }, { label: 'Equipment', active: true }];
         }
+        if (route().current('bookings.*')) {
+            return [{ label: isAssistantEngineer ? 'Daily Operations' : 'Management', url: '#' }, { label: 'Bookings', active: true }];
+        }
+        if (route().current('settings.*')) return [{ label: 'Management', url: '#' }, { label: 'System Settings', active: true }];
         if (route().current('users.*')) {
             return [{ label: 'Management', url: '#' }, { label: 'Users', active: true }];
         }
@@ -156,24 +166,25 @@ export default function Authenticated({
                                             </Link>
                                         </SidebarMenuButton>
                                     </SidebarMenuItem>
+
                                 </SidebarMenu>
                             </div>
 
-                            {/* Management Group */}
+                            {/* Daily Operations Group */}
                             <div className="px-2 py-1.5">
                                 <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-450 dark:text-zinc-500 group-data-[collapsible=icon]:hidden">
-                                    Management
+                                    Daily Operations
                                 </span>
                                 <SidebarMenu className="mt-1.5 gap-1">
                                     <SidebarMenuItem>
                                         <SidebarMenuButton
                                             asChild
                                             isActive={isLaboratoriesActive}
-                                            tooltip="Laboratories"
+                                            tooltip={isAssistantEngineer ? 'My Laboratories' : 'Laboratories'}
                                         >
                                             <Link href={route('laboratories.index')} className="flex items-center gap-3">
                                                 <Building2 className="h-4.5 w-4.5 shrink-0" />
-                                                <span className="group-data-[collapsible=icon]:hidden">Laboratories</span>
+                                                <span className="group-data-[collapsible=icon]:hidden">{isAssistantEngineer ? 'My Laboratories' : 'Laboratories'}</span>
                                             </Link>
                                         </SidebarMenuButton>
                                     </SidebarMenuItem>
@@ -182,29 +193,27 @@ export default function Authenticated({
                                         <SidebarMenuButton
                                             asChild
                                             isActive={isEquipmentActive}
-                                            tooltip="Equipment Assets"
+                                            tooltip={isAssistantEngineer ? 'My Equipment' : 'Equipment'}
                                         >
                                             <Link href={route('equipment.index')} className="flex items-center gap-3">
                                                 <Wrench className="h-4.5 w-4.5 shrink-0" />
-                                                <span className="group-data-[collapsible=icon]:hidden">Equipment Assets</span>
+                                                <span className="group-data-[collapsible=icon]:hidden">{isAssistantEngineer ? 'My Equipment' : 'Equipment'}</span>
                                             </Link>
                                         </SidebarMenuButton>
                                     </SidebarMenuItem>
 
                                     <SidebarMenuItem>
-                                        <SidebarMenuButton
-                                            asChild
-                                            isActive={isUsersActive}
-                                            tooltip="User Accounts"
-                                        >
-                                            <Link href={route('users.index')} className="flex items-center gap-3">
-                                                <Users className="h-4.5 w-4.5 shrink-0" />
-                                                <span className="group-data-[collapsible=icon]:hidden">User Accounts</span>
+                                        <SidebarMenuButton asChild isActive={isBookingsActive} tooltip="Bookings">
+                                            <Link href={route('bookings.index')} className="flex items-center gap-3">
+                                                <CalendarDays className="h-4.5 w-4.5 shrink-0" />
+                                                <span className="group-data-[collapsible=icon]:hidden">Bookings</span>
                                             </Link>
                                         </SidebarMenuButton>
                                     </SidebarMenuItem>
+
                                 </SidebarMenu>
                             </div>
+                            {canManageUsers && <div className="px-2 py-1.5"><span className="text-[10px] font-bold uppercase tracking-wider text-zinc-450 dark:text-zinc-500 group-data-[collapsible=icon]:hidden">Administration</span><SidebarMenu className="mt-1.5 gap-1"><SidebarMenuItem><SidebarMenuButton asChild isActive={isUsersActive} tooltip="User Accounts"><Link href={route('users.index')} className="flex items-center gap-3"><Users className="h-4.5 w-4.5 shrink-0" /><span className="group-data-[collapsible=icon]:hidden">User Accounts</span></Link></SidebarMenuButton></SidebarMenuItem><SidebarMenuItem><SidebarMenuButton asChild isActive={isSettingsActive} tooltip="System Settings"><Link href={route('settings.edit')} className="flex items-center gap-3"><Settings className="h-4.5 w-4.5 shrink-0" /><span className="group-data-[collapsible=icon]:hidden">System Settings</span></Link></SidebarMenuButton></SidebarMenuItem></SidebarMenu></div>}
                         </SidebarContent>
 
                         {/* Footer / User Widget */}

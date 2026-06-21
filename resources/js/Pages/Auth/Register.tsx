@@ -46,8 +46,8 @@ export default function Register() {
                 
                 <CardContent className="grid gap-4">
                     <form onSubmit={submit} className="grid gap-4">
-                        {/* 2-Column Row for Name & Username */}
-                        <div className="grid grid-cols-2 gap-4">
+                        {/* Name and username */}
+                        <div className="grid gap-4">
                             <div className="grid gap-2">
                                 <Label htmlFor="name" className="text-zinc-700 dark:text-zinc-350">
                                     Name
@@ -148,7 +148,7 @@ export default function Register() {
                     </form>
 
                     {/* Divider */}
-                    <div className="relative flex py-2 items-center">
+                    <div className="hidden">
                         <div className="flex-grow border-t border-zinc-200 dark:border-zinc-850"></div>
                         <span className="flex-shrink mx-4 text-zinc-400 dark:text-zinc-500 text-xs font-semibold uppercase tracking-wider">
                             or continue with
@@ -157,7 +157,7 @@ export default function Register() {
                     </div>
 
                     {/* Social Buttons */}
-                    <div className="grid gap-2">
+                    <div className="hidden">
                         <Button 
                             variant="outline" 
                             className="w-full border-zinc-200/80 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-850 cursor-not-allowed text-zinc-700 dark:text-zinc-300"

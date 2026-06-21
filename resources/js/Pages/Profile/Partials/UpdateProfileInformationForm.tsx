@@ -2,7 +2,6 @@ import InputError from '@/Components/InputError';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import { Button } from '@/Components/ui/button';
-import { Transition } from '@headlessui/react';
 import { Link, useForm, usePage } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
 
@@ -104,17 +103,11 @@ export default function UpdateProfileInformation({
             <div className="flex items-center gap-4">
                 <Button type="submit" disabled={processing} className="bg-indigo-600 text-white hover:bg-indigo-700">Save</Button>
 
-                <Transition
-                    show={recentlySuccessful}
-                    enter="transition ease-in-out"
-                    enterFrom="opacity-0"
-                    leave="transition ease-in-out"
-                    leaveTo="opacity-0"
-                >
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                {recentlySuccessful && (
+                    <p className="text-sm text-gray-600 dark:text-gray-400 animate-fade-in">
                         Saved.
                     </p>
-                </Transition>
+                )}
             </div>
         </form>
     );

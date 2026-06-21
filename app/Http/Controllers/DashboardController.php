@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Laboratory;
-use App\Models\Equipment;
+use App\Models\EquipmentInventoryItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -18,38 +18,53 @@ class DashboardController extends Controller
     public function index(Request $request): Response
     {
         $user = $request->user();
+        $isAssistantEngineer = $user->hasRole('Assistant Engineer');
+        $laboratoriesQuery = Laboratory::query();
+
+        if ($isAssistantEngineer) {
+            $laboratoriesQuery->where('responsible_officer_id', $user->id);
+        }
+
+        $laboratoryIds = (clone $laboratoriesQuery)->pluck('id');
+        $equipmentQuery = EquipmentInventoryItem::query();
+        $bookingsQuery = DB::table('bookings');
+
+        if ($isAssistantEngineer) {
+            $equipmentQuery->whereIn('laboratory_id', $laboratoryIds);
+            $bookingsQuery->whereIn('laboratory_id', $laboratoryIds);
+        }
 
         // Core counts
         $totalUsers = User::count();
-        $totalLaboratories = Laboratory::count();
-        $totalEquipment = Equipment::count();
-        $totalBookings = DB::table('bookings')->count();
+        $totalLaboratories = (clone $laboratoriesQuery)->count();
+        $totalEquipment = (clone $equipmentQuery)->sum('quantity');
+        $totalBookings = (clone $bookingsQuery)->count();
 
         // Laboratory Status counts
         $labStatusCounts = [
-            'active' => Laboratory::where('status', 'active')->count(),
-            'inactive' => Laboratory::where('status', 'inactive')->count(),
-            'maintenance' => Laboratory::where('status', 'maintenance')->count(),
+            'active' => (clone $laboratoriesQuery)->where('status', 'active')->count(),
+            'inactive' => (clone $laboratoriesQuery)->where('status', 'inactive')->count(),
+            'maintenance' => (clone $laboratoriesQuery)->where('status', 'maintenance')->count(),
         ];
 
         // Equipment Status counts
         $equipmentStatusCounts = [
-            'available' => Equipment::where('status', 'available')->count(),
-            'reserved' => Equipment::where('status', 'reserved')->count(),
-            'borrowed' => Equipment::where('status', 'borrowed')->count(),
-            'maintenance' => Equipment::where('status', 'maintenance')->count(),
-            'damaged' => Equipment::where('status', 'damaged')->count(),
-            'retired' => Equipment::where('status', 'retired')->count(),
+            'available' => (clone $equipmentQuery)->where('status', 'available')->sum('quantity'),
+            'reserved' => 0,
+            'borrowed' => 0,
+            'maintenance' => (clone $equipmentQuery)->where('status', 'maintenance')->sum('quantity'),
+            'damaged' => (clone $equipmentQuery)->where('status', 'damaged')->sum('quantity'),
+            'retired' => (clone $equipmentQuery)->where('status', 'retired')->sum('quantity'),
         ];
 
         // Recent users
         $recentUsers = User::latest()->limit(5)->get();
 
         // Recent equipment
-        $recentEquipment = Equipment::with('laboratory')->latest()->limit(5)->get();
+        $recentEquipment = (clone $equipmentQuery)->with('laboratory')->latest()->limit(5)->get();
 
         // Recent bookings
-        $recentBookings = DB::table('bookings')
+        $recentBookingsQuery = DB::table('bookings')
             ->join('users', 'bookings.user_id', '=', 'users.id')
             ->join('laboratories', 'bookings.laboratory_id', '=', 'laboratories.id')
             ->select(
@@ -62,10 +77,13 @@ class DashboardController extends Controller
                 'users.name as user_name',
                 'laboratories.name as laboratory_name',
                 'laboratories.code as laboratory_code'
-            )
-            ->latest('bookings.created_at')
-            ->limit(5)
-            ->get();
+            );
+
+        if ($isAssistantEngineer) {
+            $recentBookingsQuery->whereIn('bookings.laboratory_id', $laboratoryIds);
+        }
+
+        $recentBookings = $recentBookingsQuery->latest('bookings.created_at')->limit(5)->get();
 
         return Inertia::render('Dashboard', [
             'stats' => [
@@ -79,6 +97,7 @@ class DashboardController extends Controller
             'recent_users' => $recentUsers,
             'recent_equipment' => $recentEquipment,
             'recent_bookings' => $recentBookings,
+            'is_assistant_engineer' => $isAssistantEngineer,
         ]);
     }
 }

@@ -49,9 +49,10 @@ interface Props {
         search?: string;
         status?: string;
     };
+    is_assistant_engineer: boolean;
 }
 
-export default function Index({ laboratories, users, filters }: Props) {
+export default function Index({ laboratories, users, filters, is_assistant_engineer: isAssistantEngineer }: Props) {
     const [search, setSearch] = useState(filters.search || '');
     const [statusFilter, setStatusFilter] = useState(filters.status || 'all');
     const [isOpen, setIsOpen] = useState(false);
@@ -156,15 +157,18 @@ export default function Index({ laboratories, users, filters }: Props) {
         <AuthenticatedLayout
             header={
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
-                        Laboratory Management
-                    </h2>
-                    <Button
+                    <div>
+                        <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+                            {isAssistantEngineer ? 'My Laboratories' : 'Laboratory Management'}
+                        </h2>
+                        {isAssistantEngineer && <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Laboratories assigned to you and their current operational status.</p>}
+                    </div>
+                    {!isAssistantEngineer && <Button
                         onClick={openCreateModal}
                         className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm flex items-center gap-1.5 self-start sm:self-auto"
                     >
                         <Plus className="h-4 w-4" /> Add Laboratory
-                    </Button>
+                    </Button>}
                 </div>
             }
         >
@@ -234,14 +238,14 @@ export default function Index({ laboratories, users, filters }: Props) {
                                     <TableHead className="font-semibold">Location</TableHead>
                                     <TableHead className="w-[100px] text-center font-semibold">Capacity</TableHead>
                                     <TableHead className="w-[130px] font-semibold">Status</TableHead>
-                                    <TableHead className="font-semibold">Responsible Officer</TableHead>
+                                    {!isAssistantEngineer && <TableHead className="font-semibold">Responsible Officer</TableHead>}
                                     <TableHead className="w-[120px] text-right font-semibold">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {laboratories.data.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={7} className="h-32 text-center text-zinc-500">
+                                        <TableCell colSpan={isAssistantEngineer ? 6 : 7} className="h-32 text-center text-zinc-500">
                                             No laboratories found.
                                         </TableCell>
                                     </TableRow>
@@ -263,12 +267,12 @@ export default function Index({ laboratories, users, filters }: Props) {
                                             <TableCell>
                                                 {getStatusBadge(lab.status)}
                                             </TableCell>
-                                            <TableCell className="text-zinc-700 dark:text-zinc-300">
+                                            {!isAssistantEngineer && <TableCell className="text-zinc-700 dark:text-zinc-300">
                                                 {lab.responsible_officer?.name || 'N/A'}
                                                 <span className="block text-xs text-zinc-400">
                                                     {lab.responsible_officer?.email}
                                                 </span>
-                                            </TableCell>
+                                            </TableCell>}
                                             <TableCell className="text-right">
                                                 <div className="flex justify-end gap-1.5">
                                                     <Button
@@ -276,17 +280,18 @@ export default function Index({ laboratories, users, filters }: Props) {
                                                         size="icon-sm"
                                                         onClick={() => openEditModal(lab)}
                                                         className="text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200"
+                                                        title={isAssistantEngineer ? 'Update status' : 'Edit laboratory'}
                                                     >
                                                         <Edit2 className="h-4 w-4" />
                                                     </Button>
-                                                    <Button
+                                                    {!isAssistantEngineer && <Button
                                                         variant="ghost"
                                                         size="icon-sm"
                                                         onClick={() => confirmDelete(lab.id)}
                                                         className="text-rose-600 hover:text-rose-900 hover:bg-rose-50 dark:hover:bg-rose-950/20"
                                                     >
                                                         <Trash2 className="h-4 w-4" />
-                                                    </Button>
+                                                    </Button>}
                                                 </div>
                                             </TableCell>
                                         </TableRow>
@@ -333,12 +338,12 @@ export default function Index({ laboratories, users, filters }: Props) {
                 <DialogContent className="sm:max-w-[480px]">
                     <DialogHeader>
                         <DialogTitle>
-                            {editId ? 'Edit Laboratory' : 'Add Laboratory'}
+                            {isAssistantEngineer ? 'Update Laboratory Status' : editId ? 'Edit Laboratory' : 'Add Laboratory'}
                         </DialogTitle>
                     </DialogHeader>
 
                     <form onSubmit={handleSubmit} className="space-y-4 py-2">
-                        <div className="grid gap-2">
+                        {!isAssistantEngineer && <div className="grid gap-2">
                             <Label htmlFor="code">Laboratory Code</Label>
                             <Input
                                 id="code"
@@ -349,9 +354,9 @@ export default function Index({ laboratories, users, filters }: Props) {
                                 required
                             />
                             <InputError message={errors.code} />
-                        </div>
+                        </div>}
 
-                        <div className="grid gap-2">
+                        {!isAssistantEngineer && <div className="grid gap-2">
                             <Label htmlFor="name">Laboratory Name</Label>
                             <Input
                                 id="name"
@@ -362,10 +367,10 @@ export default function Index({ laboratories, users, filters }: Props) {
                                 required
                             />
                             <InputError message={errors.name} />
-                        </div>
+                        </div>}
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="grid gap-2">
+                        <div className={isAssistantEngineer ? 'grid gap-2' : 'grid grid-cols-2 gap-4'}>
+                            {!isAssistantEngineer && <div className="grid gap-2">
                                 <Label htmlFor="capacity">Capacity (Pax)</Label>
                                 <Input
                                     id="capacity"
@@ -377,7 +382,7 @@ export default function Index({ laboratories, users, filters }: Props) {
                                     required
                                 />
                                 <InputError message={errors.capacity} />
-                            </div>
+                            </div>}
 
                             <div className="grid gap-2">
                                 <Label htmlFor="status">Status</Label>
@@ -398,7 +403,7 @@ export default function Index({ laboratories, users, filters }: Props) {
                             </div>
                         </div>
 
-                        <div className="grid gap-2">
+                        {!isAssistantEngineer && <div className="grid gap-2">
                             <Label htmlFor="location">Location</Label>
                             <Input
                                 id="location"
@@ -409,9 +414,9 @@ export default function Index({ laboratories, users, filters }: Props) {
                                 required
                             />
                             <InputError message={errors.location} />
-                        </div>
+                        </div>}
 
-                        <div className="grid gap-2">
+                        {!isAssistantEngineer && <div className="grid gap-2">
                             <Label htmlFor="officer">Responsible Officer</Label>
                             <Select
                                 value={data.responsible_officer_id}
@@ -429,14 +434,14 @@ export default function Index({ laboratories, users, filters }: Props) {
                                 </SelectContent>
                             </Select>
                             <InputError message={errors.responsible_officer_id} />
-                        </div>
+                        </div>}
 
                         <DialogFooter className="pt-4">
                             <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
                                 Cancel
                             </Button>
                             <Button type="submit" disabled={processing} className="bg-indigo-600 text-white hover:bg-indigo-700">
-                                {editId ? 'Save Changes' : 'Create Laboratory'}
+                                {isAssistantEngineer ? 'Update Status' : editId ? 'Save Changes' : 'Create Laboratory'}
                             </Button>
                         </DialogFooter>
                     </form>

@@ -5,6 +5,28 @@ All notable changes to the **SPMP-FTKIP** project will be documented in this fil
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0] - 2026-06-20
+
+### Removed
+- Fully deleted the combined `radix-nova` styling, component configuration, and dependencies (`radix-ui`).
+
+### Changed
+- Migrated `components.json` style configuration to `"new-york"` and tailwind base color to `"gray"`.
+- Replaced all 29 custom `radix-nova` components in `resources/js/Components/ui/` with standard Shadcn `new-york` Gray elements.
+- Cleaned up imports across UI components to target uppercase `@/Components/` alias path.
+- Updated `resources/css/app.css` and added `resources/css/themes.css` with the standard Shadcn themes and variables.
+- Aligned dependencies in `package.json` with the standard Shadcn UI kit (downgraded `react-day-picker` to `^9.13.0` and `recharts` to `^2.15.4` to match standard component types, installed individual `@radix-ui/react-*` packages and `tailwindcss-animate`).
+
+## [0.7.0] - 2026-06-20
+
+### Added
+- Overhauled the main dashboard (`Dashboard.tsx`) to integrate Shadcn UI Kit theme layout and widgets with actual database statistics and activities.
+- Created `recent-bookings-table.tsx` to display live reservation logs using TanStack Table.
+- Refactored `theme-members.tsx` to dynamically parse and list database users with initials and auto-fallbacks.
+- Created `DashboardDefault.tsx` and registered `/dashboard/default` route to preview the static, mock dashboard kit.
+- Installed `recharts`, `@tanstack/react-table`, and `cmdk` npm packages to support charts and table widgets.
+- Added explicit Log Out buttons and Date Range Pickers inside the dashboard page headers.
+
 ## [0.6.0] - 2026-06-20
 
 ### Added

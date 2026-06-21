@@ -19,6 +19,11 @@ class LaboratoryController extends Controller
     public function index(Request $request): Response
     {
         $query = Laboratory::with('responsibleOfficer');
+        $isAssistantEngineer = $request->user()->hasRole('Assistant Engineer');
+
+        if ($isAssistantEngineer) {
+            $query->where('responsible_officer_id', $request->user()->id);
+        }
 
         if ($request->filled('search')) {
             $search = $request->input('search');
@@ -34,12 +39,15 @@ class LaboratoryController extends Controller
         }
 
         $laboratories = $query->latest()->paginate(10)->withQueryString();
-        $users = User::select('id', 'name', 'email')->get();
+        $users = $isAssistantEngineer
+            ? collect()
+            : User::select('id', 'name', 'email')->get();
 
         return Inertia::render('LaboratoryManagement/Index', [
             'laboratories' => $laboratories,
             'users' => $users,
             'filters' => $request->only(['search', 'status']),
+            'is_assistant_engineer' => $isAssistantEngineer,
         ]);
     }
 
@@ -48,6 +56,8 @@ class LaboratoryController extends Controller
      */
     public function store(StoreLaboratoryRequest $request): RedirectResponse
     {
+        abort_if($request->user()->hasRole('Assistant Engineer'), 403);
+
         Laboratory::create($request->validated());
 
         return redirect()->route('laboratories.index')->with('success', 'Laboratory created successfully.');
@@ -58,6 +68,13 @@ class LaboratoryController extends Controller
      */
     public function update(UpdateLaboratoryRequest $request, Laboratory $laboratory): RedirectResponse
     {
+        if ($request->user()->hasRole('Assistant Engineer')) {
+            abort_unless($laboratory->responsible_officer_id === $request->user()->id, 403);
+            $laboratory->update(['status' => $request->validated('status')]);
+
+            return redirect()->route('laboratories.index')->with('success', 'Laboratory status updated successfully.');
+        }
+
         $laboratory->update($request->validated());
 
         return redirect()->route('laboratories.index')->with('success', 'Laboratory updated successfully.');
@@ -68,6 +85,8 @@ class LaboratoryController extends Controller
      */
     public function destroy(Laboratory $laboratory): RedirectResponse
     {
+        abort_if(request()->user()->hasRole('Assistant Engineer'), 403);
+
         $laboratory->delete();
 
         return redirect()->route('laboratories.index')->with('success', 'Laboratory deleted successfully.');

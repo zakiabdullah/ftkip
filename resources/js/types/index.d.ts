@@ -40,6 +40,20 @@ export interface Equipment {
     updated_at: string;
 }
 
+export interface EquipmentInventoryItem {
+    id: number;
+    laboratory_id: number;
+    laboratory?: Laboratory;
+    name: string;
+    quantity: number;
+    unit_type: 'unit' | 'set' | 'piece' | 'license';
+    track_individually: boolean;
+    status: 'available' | 'maintenance' | 'damaged' | 'retired';
+    source_text: string | null;
+    created_at: string;
+    updated_at: string;
+}
+
 export interface PaginatedData<T> {
     data: T[];
     current_page: number;
