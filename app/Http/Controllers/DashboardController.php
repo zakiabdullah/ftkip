@@ -19,6 +19,7 @@ class DashboardController extends Controller
     {
         $user = $request->user();
         $isAssistantEngineer = $user->hasRole('Assistant Engineer');
+        $isLecturer = $user->hasRole('Lecturer / Supervisor');
         $laboratoriesQuery = Laboratory::query();
 
         if ($isAssistantEngineer) {
@@ -32,6 +33,8 @@ class DashboardController extends Controller
         if ($isAssistantEngineer) {
             $equipmentQuery->whereIn('laboratory_id', $laboratoryIds);
             $bookingsQuery->whereIn('laboratory_id', $laboratoryIds);
+        } elseif ($isLecturer) {
+            $bookingsQuery->where('supervisor_id', $user->id);
         }
 
         // Core counts
@@ -81,6 +84,8 @@ class DashboardController extends Controller
 
         if ($isAssistantEngineer) {
             $recentBookingsQuery->whereIn('bookings.laboratory_id', $laboratoryIds);
+        } elseif ($isLecturer) {
+            $recentBookingsQuery->where('bookings.supervisor_id', $user->id);
         }
 
         $recentBookings = $recentBookingsQuery->latest('bookings.created_at')->limit(5)->get();
@@ -93,11 +98,13 @@ class DashboardController extends Controller
                 'total_bookings' => $totalBookings,
                 'lab_status_counts' => $labStatusCounts,
                 'equipment_status_counts' => $equipmentStatusCounts,
+                'pending_bookings' => (clone $bookingsQuery)->where('status', $isLecturer ? 'pending_supervisor' : 'pending_admin')->count(),
             ],
             'recent_users' => $recentUsers,
             'recent_equipment' => $recentEquipment,
             'recent_bookings' => $recentBookings,
             'is_assistant_engineer' => $isAssistantEngineer,
+            'is_lecturer' => $isLecturer,
         ]);
     }
 }

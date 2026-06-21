@@ -35,7 +35,7 @@ Route::middleware('auth')->group(function () {
 
     Route::resource('laboratories', LaboratoryController::class);
     Route::resource('equipment', EquipmentInventoryController::class)->only(['index', 'store', 'update', 'destroy']);
-    Route::resource('bookings', BookingController::class)->only(['index', 'store', 'update']);
+    Route::resource('bookings', BookingController::class)->only(['index', 'show', 'store', 'update']);
     Route::get('settings', [SystemSettingController::class, 'edit'])->name('settings.edit');
     Route::patch('settings', [SystemSettingController::class, 'update'])->name('settings.update');
     Route::resource('users', UserManagementController::class);

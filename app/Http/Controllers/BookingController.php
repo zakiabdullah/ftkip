@@ -6,11 +6,13 @@ use App\Models\Booking;
 use App\Models\BookingItem;
 use App\Models\EquipmentInventoryItem;
 use App\Models\Laboratory;
+use App\Models\SystemSetting;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -51,6 +53,18 @@ class BookingController extends Controller
         ]);
     }
 
+    public function show(Request $request, Booking $booking): Response
+    {
+        $user = $request->user();
+        $isAllowed = $user->hasRole('Super Administrator')
+            || $booking->user_id === $user->id
+            || ($user->hasRole('Lecturer / Supervisor') && $booking->supervisor_id === $user->id)
+            || ($user->hasRole('Assistant Engineer') && $booking->laboratory->responsible_officer_id === $user->id);
+        abort_unless($isAllowed, 403);
+
+        return Inertia::render('Bookings/Show', ['booking' => $booking->load(['user:id,name,email', 'supervisor:id,name,email', 'laboratory:id,name,code,location', 'items.equipment:id,name,quantity,unit_type,status'])]);
+    }
+
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
@@ -64,6 +78,7 @@ class BookingController extends Controller
             'items.*.equipment_inventory_item_id' => ['required', 'exists:equipment_inventory_items,id'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
         ]);
+        $this->validateBookingRules($data);
 
         DB::transaction(function () use ($data, $request) {
             foreach ($data['items'] as $index => $item) {
@@ -106,7 +121,7 @@ class BookingController extends Controller
 
     public function update(Request $request, Booking $booking): RedirectResponse
     {
-        $data = $request->validate(['action' => ['required', 'in:approve,reject,cancel,edit'], 'rejection_reason' => ['nullable', 'string', 'max:1000']]);
+        $data = $request->validate(['action' => ['required', 'in:approve,reject,cancel,edit'], 'rejection_reason' => ['nullable', 'string', 'max:1000', 'required_if:action,reject']]);
         $user = $request->user();
 
         if ($data['action'] === 'edit' && $booking->user_id === $user->id && $booking->status === 'pending_supervisor') {
@@ -116,6 +131,7 @@ class BookingController extends Controller
                 'purpose' => ['required', 'string', 'max:2000'], 'safety_declared' => ['accepted'],
                 'items' => ['required', 'array', 'min:1'], 'items.*.equipment_inventory_item_id' => ['required', 'exists:equipment_inventory_items,id'], 'items.*.quantity' => ['required', 'integer', 'min:1'],
             ]);
+            $this->validateBookingRules($edited);
             foreach ($edited['items'] as $index => $item) {
                 $equipment = EquipmentInventoryItem::findOrFail($item['equipment_inventory_item_id']);
                 if ($equipment->laboratory_id !== (int) $edited['laboratory_id']) throw ValidationException::withMessages(["items.{$index}.equipment_inventory_item_id" => 'Equipment must belong to the selected laboratory.']);
@@ -136,14 +152,34 @@ class BookingController extends Controller
             return redirect()->route('bookings.index')->with('success', 'Booking request cancelled.');
         }
 
+        if ($booking->status === 'pending_supervisor' && $data['action'] === 'reject' && $user->hasRole('Assistant Engineer') && $booking->laboratory->responsible_officer_id === $user->id) {
+            $booking->update(['status' => 'rejected', 'rejection_reason' => $data['rejection_reason'] ?? null]);
+
+            return redirect()->route('bookings.index')->with('success', 'Booking request rejected.');
+        }
+
         if ($booking->status === 'pending_supervisor' && $booking->supervisor_id === $user->id && $user->hasRole('Lecturer / Supervisor')) {
-            $booking->update(['status' => $data['action'] === 'approve' ? 'pending_admin' : 'rejected', 'rejection_reason' => $data['action'] === 'reject' ? $data['rejection_reason'] : null, 'approved_by_supervisor_id' => $data['action'] === 'approve' ? $user->id : null]);
+            $booking->update(['status' => $data['action'] === 'approve' ? 'pending_admin' : 'rejected', 'rejection_reason' => $data['action'] === 'reject' ? ($data['rejection_reason'] ?? null) : null, 'approved_by_supervisor_id' => $data['action'] === 'approve' ? $user->id : null]);
         } elseif ($booking->status === 'pending_admin' && ($user->hasRole('Super Administrator') || ($user->hasRole('Assistant Engineer') && $booking->laboratory->responsible_officer_id === $user->id))) {
-            $booking->update(['status' => $data['action'] === 'approve' ? 'approved' : 'rejected', 'rejection_reason' => $data['action'] === 'reject' ? $data['rejection_reason'] : null, 'approved_by_admin_id' => $data['action'] === 'approve' ? $user->id : null]);
+            $booking->update(['status' => $data['action'] === 'approve' ? 'approved' : 'rejected', 'rejection_reason' => $data['action'] === 'reject' ? ($data['rejection_reason'] ?? null) : null, 'approved_by_admin_id' => $data['action'] === 'approve' ? $user->id : null]);
         } else {
             abort(403);
         }
 
         return redirect()->route('bookings.index')->with('success', 'Booking request updated.');
+    }
+
+    private function validateBookingRules(array $data): void
+    {
+        $start = Carbon::parse($data['start_time']);
+        $end = Carbon::parse($data['end_time']);
+        $opening = SystemSetting::value('booking_start_time', '08:00');
+        $closing = SystemSetting::value('booking_end_time', '18:00');
+        $maximumHours = (int) SystemSetting::value('max_booking_hours', '4');
+        $advanceDays = (int) SystemSetting::value('advance_booking_days', '30');
+
+        if ($start->format('H:i') < $opening || $end->format('H:i') > $closing) throw ValidationException::withMessages(['start_time' => "Bookings are available only from {$opening} to {$closing}."]);
+        if ($start->diffInMinutes($end) > $maximumHours * 60) throw ValidationException::withMessages(['end_time' => "A booking cannot exceed {$maximumHours} hours."]);
+        if ($start->greaterThan(now()->addDays($advanceDays))) throw ValidationException::withMessages(['start_time' => "Bookings can only be made {$advanceDays} days in advance."]);
     }
 }

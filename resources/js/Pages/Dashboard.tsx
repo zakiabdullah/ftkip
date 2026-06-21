@@ -18,7 +18,6 @@ import {
     ChatWidget,
     ExerciseMinutes,
     RecentBookingsTable,
-    PaymentMethodCard,
     SubscriptionsCard,
     TeamMembersCard,
     TotalRevenueCard
@@ -30,9 +29,10 @@ interface Props {
     recent_equipment: EquipmentInventoryItem[];
     recent_bookings: DashboardBooking[];
     is_assistant_engineer: boolean;
+    is_lecturer: boolean;
 }
 
-export default function Dashboard({ stats, recent_users, recent_bookings, is_assistant_engineer: isAssistantEngineer }: Props) {
+export default function Dashboard({ stats, recent_users, recent_bookings, is_assistant_engineer: isAssistantEngineer, is_lecturer: isLecturer }: Props) {
     const authUser = usePage().props.auth.user;
     const userRole = authUser.roles?.[0]?.name || 'Super Administrator';
 
@@ -42,10 +42,10 @@ export default function Dashboard({ stats, recent_users, recent_bookings, is_ass
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div>
                         <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-                            {isAssistantEngineer ? 'Operations Dashboard' : 'Dashboard Overview'}
+                            {isLecturer ? 'Supervisor Dashboard' : isAssistantEngineer ? 'Operations Dashboard' : 'Dashboard Overview'}
                         </h2>
                         <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                            {isAssistantEngineer ? 'Your assigned laboratories, equipment, and booking activity.' : 'Real-time statistics and activities for FTKIP Portal.'}
+                            {isLecturer ? 'Booking approvals and supervised laboratory activity.' : isAssistantEngineer ? 'Your assigned laboratories, equipment, and booking activity.' : 'Real-time statistics and activities for FTKIP Portal.'}
                         </p>
                     </div>
                     <div className="flex items-center gap-3">
@@ -73,7 +73,9 @@ export default function Dashboard({ stats, recent_users, recent_bookings, is_ass
                             Welcome back, {authUser.name}!
                         </h3>
                         <p className="text-sm md:text-base text-zinc-100/90 leading-relaxed">
-                            {isAssistantEngineer ? (
+                            {isLecturer ? (
+                                <>Review booking requests assigned to you and monitor upcoming supervised bookings.</>
+                            ) : isAssistantEngineer ? (
                                 <>Manage your assigned laboratories, equipment assets, and booking activity from one place.</>
                             ) : (
                                 <>You are logged in as a <strong>{userRole}</strong>. You have full access to manage laboratory details, register new equipment assets, authorize bookings, and administer system users.</>
@@ -89,16 +91,16 @@ export default function Dashboard({ stats, recent_users, recent_bookings, is_ass
                     {/* Card 1: Users */}
                     <Card className="border-zinc-200/80 dark:border-zinc-800 shadow-sm hover:shadow-md transition-shadow">
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
-                            <CardTitle className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">{isAssistantEngineer ? 'My Laboratories' : 'Total Users'}</CardTitle>
+                            <CardTitle className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">{isLecturer ? 'Pending Approvals' : isAssistantEngineer ? 'My Laboratories' : 'Total Users'}</CardTitle>
                             <div className="h-9 w-9 rounded-lg bg-indigo-50 dark:bg-indigo-950/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
                                 <Users className="h-5 w-5" />
                             </div>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-3xl font-bold tracking-tight">{isAssistantEngineer ? stats.total_laboratories : stats.total_users}</div>
+                            <div className="text-3xl font-bold tracking-tight">{isLecturer ? stats.pending_bookings : isAssistantEngineer ? stats.total_laboratories : stats.total_users}</div>
                             <div className="flex items-center gap-1 mt-1 text-xs text-indigo-600 dark:text-indigo-400 font-semibold">
-                                <Link href={route(isAssistantEngineer ? 'laboratories.index' : 'users.index')} className="flex items-center gap-0.5 hover:underline">
-                                    {isAssistantEngineer ? 'View my laboratories' : 'Manage accounts'} <ArrowUpRight className="h-3 w-3" />
+                                <Link href={route(isLecturer ? 'bookings.index' : isAssistantEngineer ? 'laboratories.index' : 'users.index')} className="flex items-center gap-0.5 hover:underline">
+                                    {isLecturer ? 'Review approvals' : isAssistantEngineer ? 'View my laboratories' : 'Manage accounts'} <ArrowUpRight className="h-3 w-3" />
                                 </Link>
                             </div>
                         </CardContent>
@@ -161,17 +163,16 @@ export default function Dashboard({ stats, recent_users, recent_bookings, is_ass
 
                 {/* Symmetrical Shadcn Grid Layout */}
                 <div className="gap-4 space-y-4 lg:grid lg:grid-cols-3 lg:space-y-0">
-                    {!isAssistantEngineer && <TeamMembersCard users={recent_users} />}
-                    {!isAssistantEngineer && <SubscriptionsCard />}
-                    {!isAssistantEngineer && <TotalRevenueCard />}
-                    {!isAssistantEngineer && <ChatWidget />}
-                    {!isAssistantEngineer && <div className="lg:col-span-2">
+                    {!isAssistantEngineer && !isLecturer && <TeamMembersCard users={recent_users} />}
+                    {!isAssistantEngineer && !isLecturer && <SubscriptionsCard />}
+                    {!isAssistantEngineer && !isLecturer && <TotalRevenueCard />}
+                    {!isAssistantEngineer && !isLecturer && <ChatWidget />}
+                    {!isAssistantEngineer && !isLecturer && <div className="lg:col-span-2">
                         <ExerciseMinutes />
                     </div>}
-                    <div className="lg:col-span-2">
+                    <div className="lg:col-span-3">
                         <RecentBookingsTable bookings={recent_bookings} />
                     </div>
-                    <PaymentMethodCard />
                 </div>
             </div>
         </AuthenticatedLayout>

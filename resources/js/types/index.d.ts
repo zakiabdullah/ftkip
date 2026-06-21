@@ -91,6 +91,7 @@ export interface DashboardStats {
     total_laboratories: number;
     total_equipment: number;
     total_bookings: number;
+    pending_bookings: number;
     lab_status_counts: {
         active: number;
         inactive: number;

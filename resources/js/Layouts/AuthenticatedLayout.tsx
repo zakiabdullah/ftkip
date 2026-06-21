@@ -49,6 +49,7 @@ export default function Authenticated({
     const user = usePage().props.auth.user;
     const userRole = user.roles?.[0]?.name || 'Super Administrator';
     const isAssistantEngineer = userRole === 'Assistant Engineer';
+    const isLecturer = userRole === 'Lecturer / Supervisor';
     const canManageUsers = userRole === 'Super Administrator';
 
     const userInitials = user.name
@@ -173,7 +174,7 @@ export default function Authenticated({
                             {/* Daily Operations Group */}
                             <div className="px-2 py-1.5">
                                 <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-450 dark:text-zinc-500 group-data-[collapsible=icon]:hidden">
-                                    Daily Operations
+                                    {isLecturer ? 'Supervision' : 'Daily Operations'}
                                 </span>
                                 <SidebarMenu className="mt-1.5 gap-1">
                                     <SidebarMenuItem>
@@ -203,10 +204,10 @@ export default function Authenticated({
                                     </SidebarMenuItem>
 
                                     <SidebarMenuItem>
-                                        <SidebarMenuButton asChild isActive={isBookingsActive} tooltip="Bookings">
+                                        <SidebarMenuButton asChild isActive={isBookingsActive} tooltip={isLecturer ? 'Booking Approvals' : 'Bookings'}>
                                             <Link href={route('bookings.index')} className="flex items-center gap-3">
                                                 <CalendarDays className="h-4.5 w-4.5 shrink-0" />
-                                                <span className="group-data-[collapsible=icon]:hidden">Bookings</span>
+                                                <span className="group-data-[collapsible=icon]:hidden">{isLecturer ? 'Booking Approvals' : 'Bookings'}</span>
                                             </Link>
                                         </SidebarMenuButton>
                                     </SidebarMenuItem>

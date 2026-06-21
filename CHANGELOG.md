@@ -5,6 +5,21 @@ All notable changes to the **SPMP-FTKIP** project will be documented in this fil
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] - 2026-06-21
+
+### Added
+- Added a Booking Details page with laboratory, requester, supervisor, schedule, requested equipment, and rejection reason information.
+- Added booking links from the booking list and registered the booking detail route.
+- Added configurable booking rule enforcement for operating hours, maximum booking duration, and advance-booking limit.
+- Added pending-booking counts to the dashboard statistics.
+
+### Changed
+- Refined booking approvals for Lecturer / Supervisor and Assistant Engineer roles, including Assistant Engineer rejection of bookings for their assigned laboratories.
+- Required a rejection reason whenever a booking is rejected and fixed rejection handling when no optional reason value is present.
+- Tailored the Lecturer / Supervisor dashboard and navigation around booking approvals; the recent booking requests panel now uses the full available width.
+- Polished the Equipment inventory page to match the user-management table layout, including filters, pagination, improved actions, and responsive table styling.
+- Set fixed widths and text wrapping for both Equipment Details and Laboratory columns to prevent long equipment or laboratory names from expanding the table.
+
 ## [0.8.0] - 2026-06-20
 
 ### Removed
